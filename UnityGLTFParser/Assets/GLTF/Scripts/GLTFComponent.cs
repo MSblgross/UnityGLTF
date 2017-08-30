@@ -29,10 +29,11 @@ namespace UnityGLTFSerialization {
             {
                 var fullPath = Application.streamingAssetsPath + Url;
                 gltfStream = File.OpenRead(fullPath);
+                var gltfRoot = GLTFJsonSerialization.GLTFParser.ParseJson(gltfStream);
                 loader = new GLTFSceneImporter(
                     fullPath,
-                    gltfStream,
-                    gameObject.transform
+                    gltfRoot,
+                    gltfStream
                     );
             }
             else
@@ -46,10 +47,19 @@ namespace UnityGLTFSerialization {
             loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.PbrMetallicRoughness, GLTFStandard);
             loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.CommonConstant, GLTFConstant);
             loader.MaximumLod = MaximumLod;
-            yield return loader.Load(-1, Multithreaded);
             if(gltfStream != null)
             {
+                GameObject node = loader.LoadNode(0);
+                node.transform.parent = gameObject.transform;
+#if !WINDOWS_UWP
                 gltfStream.Close();
+#else
+                gltfStream.Dispose();
+#endif
+            }
+            else
+            {
+                yield return loader.LoadScene(-1, Multithreaded);
             }
         }
     }

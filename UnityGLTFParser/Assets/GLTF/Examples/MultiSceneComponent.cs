@@ -37,7 +37,7 @@ public class MultiSceneComponent : MonoBehaviour {
             GameObject.Destroy(child.gameObject);
         }
 
-        yield return loader.Load(SceneIndex);
+        yield return loader.LoadScene(SceneIndex);
     }
 
 
