@@ -27,7 +27,7 @@
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <OutputPath>..\..\UnityGLTF\Assets\GLTF\Plugins\Portable\</OutputPath>
+    <OutputPath>..\..\UnityGLTFParser\Assets\GLTF\Plugins\Portable\</OutputPath>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -39,7 +39,7 @@
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <OutputPath>..\..\..\..\..\UnityGLTF\Assets\GLTF\Plugins\Portable\</OutputPath>
+    <OutputPath>..\..\UnityGLTFParser\Assets\GLTF\Plugins\Portable\</OutputPath>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -48,120 +48,139 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\GLTFSerialization\Exceptions.cs">
+    <Compile Include="..\GLTFJsonSerialization\AttributeAccessor.cs">
+      <Link>AttributeAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Exceptions.cs">
       <Link>Exceptions.cs</Link>
     </Compile>
-    <Compile Include="..\GLTFSerialization\GLTFParser.cs">
+    <Compile Include="..\GLTFJsonSerialization\GLTFHelpers.cs">
+      <Link>GLTFHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\GLTFParser.cs">
       <Link>GLTFParser.cs</Link>
     </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Accessor.cs">
-      <Link>Schema\Accessor.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AccessorSparse.cs">
-      <Link>Schema\AccessorSparse.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AccessorSparseIndices.cs">
-      <Link>Schema\AccessorSparseIndices.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AccessorSparseValues.cs">
-      <Link>Schema\AccessorSparseValues.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Animation.cs">
-      <Link>Schema\Animation.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AnimationChannel.cs">
-      <Link>Schema\AnimationChannel.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AnimationChannelTarget.cs">
-      <Link>Schema\AnimationChannelTarget.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\AnimationSampler.cs">
-      <Link>Schema\AnimationSampler.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Asset.cs">
-      <Link>Schema\Asset.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Buffer.cs">
-      <Link>Schema\Buffer.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\BufferView.cs">
-      <Link>Schema\BufferView.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Camera.cs">
-      <Link>Schema\Camera.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\CameraOrthographic.cs">
-      <Link>Schema\CameraOrthographic.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\CameraPerspective.cs">
-      <Link>Schema\CameraPerspective.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Extension.cs">
-      <Link>Schema\Extension.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\GLTFChildOfRootProperty.cs">
-      <Link>Schema\GLTFChildOfRootProperty.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\GLTFId.cs">
-      <Link>Schema\GLTFId.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\GLTFProperty.cs">
-      <Link>Schema\GLTFProperty.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\GLTFRoot.cs">
-      <Link>Schema\GLTFRoot.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Image.cs">
-      <Link>Schema\Image.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Material.cs">
-      <Link>Schema\Material.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\MaterialCommonConstant.cs">
-      <Link>Schema\MaterialCommonConstant.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\MaterialNormalTextureInfo.cs">
-      <Link>Schema\MaterialNormalTextureInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\MaterialOcclusionTextureInfo.cs">
-      <Link>Schema\MaterialOcclusionTextureInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\MaterialPBRMetallicRoughness.cs">
-      <Link>Schema\MaterialPBRMetallicRoughness.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Mesh.cs">
-      <Link>Schema\Mesh.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\MeshPrimitive.cs">
-      <Link>Schema\MeshPrimitive.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Node.cs">
-      <Link>Schema\Node.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Sampler.cs">
-      <Link>Schema\Sampler.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Scene.cs">
-      <Link>Schema\Scene.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Skin.cs">
-      <Link>Schema\Skin.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\Texture.cs">
-      <Link>Schema\Texture.cs</Link>
-    </Compile>
-    <Compile Include="..\GLTFSerialization\Schema\TextureInfo.cs">
-      <Link>Schema\TextureInfo.cs</Link>
-    </Compile>
-	<Compile Include="..\GLTFSerialization\Extensions\GLTFJsonExtensions.cs">
+    <Compile Include="..\GLTFJsonSerialization\Extensions\GLTFJsonExtensions.cs">
       <Link>Extensions\GLTFJsonExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Color.cs">
+      <Link>Math\Color.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Matrix4x4.cs">
+      <Link>Math\Matrix4x4.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Quaternion.cs">
+      <Link>Math\Quaternion.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Vector2.cs">
+      <Link>Math\Vector2.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Vector3.cs">
+      <Link>Math\Vector3.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Math\Vector4.cs">
+      <Link>Math\Vector4.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Accessor.cs">
+      <Link>Schema\Accessor.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AccessorSparse.cs">
+      <Link>Schema\AccessorSparse.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AccessorSparseIndices.cs">
+      <Link>Schema\AccessorSparseIndices.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AccessorSparseValues.cs">
+      <Link>Schema\AccessorSparseValues.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Animation.cs">
+      <Link>Schema\Animation.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AnimationChannel.cs">
+      <Link>Schema\AnimationChannel.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AnimationChannelTarget.cs">
+      <Link>Schema\AnimationChannelTarget.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\AnimationSampler.cs">
+      <Link>Schema\AnimationSampler.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Asset.cs">
+      <Link>Schema\Asset.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Buffer.cs">
+      <Link>Schema\Buffer.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\BufferView.cs">
+      <Link>Schema\BufferView.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Camera.cs">
+      <Link>Schema\Camera.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\CameraOrthographic.cs">
+      <Link>Schema\CameraOrthographic.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\CameraPerspective.cs">
+      <Link>Schema\CameraPerspective.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Extension.cs">
+      <Link>Schema\Extension.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\GLTFChildOfRootProperty.cs">
+      <Link>Schema\GLTFChildOfRootProperty.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\GLTFId.cs">
+      <Link>Schema\GLTFId.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\GLTFProperty.cs">
+      <Link>Schema\GLTFProperty.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\GLTFRoot.cs">
+      <Link>Schema\GLTFRoot.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Image.cs">
+      <Link>Schema\Image.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Material.cs">
+      <Link>Schema\Material.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\MaterialCommonConstant.cs">
+      <Link>Schema\MaterialCommonConstant.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\MaterialNormalTextureInfo.cs">
+      <Link>Schema\MaterialNormalTextureInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\MaterialOcclusionTextureInfo.cs">
+      <Link>Schema\MaterialOcclusionTextureInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\MaterialPBRMetallicRoughness.cs">
+      <Link>Schema\MaterialPBRMetallicRoughness.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Mesh.cs">
+      <Link>Schema\Mesh.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\MeshPrimitive.cs">
+      <Link>Schema\MeshPrimitive.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Node.cs">
+      <Link>Schema\Node.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Sampler.cs">
+      <Link>Schema\Sampler.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Scene.cs">
+      <Link>Schema\Scene.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Skin.cs">
+      <Link>Schema\Skin.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\Texture.cs">
+      <Link>Schema\Texture.cs</Link>
+    </Compile>
+    <Compile Include="..\GLTFJsonSerialization\Schema\TextureInfo.cs">
+      <Link>Schema\TextureInfo.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="UnityEngine">
-      <HintPath>C:\Program Files\Unity 5.6.1f1\Editor\Data\PlaybackEngines\windowsstandalonesupport\Managed\UnityEngine.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

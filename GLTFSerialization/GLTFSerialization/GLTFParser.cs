@@ -1,85 +1,116 @@
-using UnityEngine;
+using GLTFJsonSerialization.Math;
 using System.Collections;
 using System;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace GLTF
+namespace GLTFJsonSerialization
 {
-	public class GLTFParser
-	{
+    public class GLTFParser
+    {
 
-		private enum ChunkFormat : uint
-		{
-			JSON = 0x4e4f534a,
-			BIN = 0x004e4942
-		}
+        private enum ChunkFormat : uint
+        {
+            JSON = 0x4e4f534a,
+            BIN = 0x004e4942
+        }
 
-		public static GLTFRoot ParseBinary(byte[] gltfBinary, out byte[] glbBuffer)
-		{
-			string gltfContent;
-			glbBuffer = null;
+        internal struct GLBHeader
+        {
+            public uint Version { get; set; }
+            public uint FileLength { get; set; }
+        }
+        
+        public static GLTFRoot ParseJson(Stream stream)
+        {
+            // Check for binary format magic bytes
+            if (IsGLB(stream))
+            {
+                ParseJsonChunk(stream);
+            }
+            else
+            {
+                stream.Position = 0;
+            }
 
-			// Check for binary format magic bytes
-			if (BitConverter.ToUInt32(gltfBinary, 0) == 0x46546c67)
-			{
-				// Parse header information
+            return GLTFRoot.Deserialize(new StreamReader(stream));
+        }
+        
+        // Moves stream position to binary chunk location
+        public static void SeekToBinaryChunk(Stream stream, int binaryChunkIndex)
+        {
+            stream.Position = 4;     // start after magic number chunk
+            GLBHeader header = ParseGLBHeader(stream);
+            uint chunkOffset = 12;   // sizeof(GLBHeader) + magic number
+            uint chunkLength = 0;
+            for (int i = 0; i < binaryChunkIndex + 2; ++i)
+            {
+                chunkOffset += chunkLength;
+                stream.Position = chunkOffset;
+                chunkLength = GetUInt32(stream);
+                chunkOffset += 8;   // to account for chunk length (4 bytes) and type (4 bytes)
+            }
 
-				var version = BitConverter.ToUInt32(gltfBinary, 4);
-				if (version != 2)
-				{
-					throw new GLTFHeaderInvalidException("Unsupported glTF version");
-				}
+            // Load Binary Chunk
+            if (chunkOffset + chunkLength <= header.FileLength)
+            {
+                uint chunkType = GetUInt32(stream);
+                if (chunkType != (uint)ChunkFormat.BIN)
+                {
+                    throw new GLTFHeaderInvalidException("Second chunk must be of type BIN if present");
+                }
+            }
+            else
+            {
+                throw new GLTFHeaderInvalidException("File length does not match chunk header.");
+            }
+        }
 
-				var length = BitConverter.ToUInt32(gltfBinary, 8);
-				if (length != gltfBinary.Length)
-				{
-					throw new GLTFHeaderInvalidException("File length does not match header.");
-				}
+        private static GLBHeader ParseGLBHeader(Stream stream)
+        {
+            uint version = GetUInt32(stream);   // 4
+            uint length = GetUInt32(stream); // 8
 
-				var chunkLength = BitConverter.ToUInt32(gltfBinary, 12);
-				var chunkType = BitConverter.ToUInt32(gltfBinary, 16);
-				if (chunkType != (uint)ChunkFormat.JSON)
-				{
-					throw new GLTFHeaderInvalidException("First chunk must be of type JSON");
-				}
+            return new GLBHeader
+            {
+                Version = version,
+                FileLength = length
+            };
+        }
 
-				// Load JSON chunk
-				gltfContent = System.Text.Encoding.UTF8.GetString(gltfBinary, 20, (int)chunkLength);
+        private static bool IsGLB(Stream stream)
+        {
+            return GetUInt32(stream) == 0x46546c67;  // 0
+        }
 
-				// Load Binary Chunk
-				if (20 + chunkLength < length)
-				{
-					var start = 20 + (int)chunkLength;
-					chunkLength = BitConverter.ToUInt32(gltfBinary, start);
-					if (start + chunkLength > length)
-					{
-						throw new GLTFHeaderInvalidException("File length does not match chunk header.");
-					}
+        private static void ParseJsonChunk(Stream stream)
+        {
+            GLBHeader header = ParseGLBHeader(stream);  // 4, 8
+            if (header.Version != 2)
+            {
+                throw new GLTFHeaderInvalidException("Unsupported glTF version");
+            };
 
-					chunkType = BitConverter.ToUInt32(gltfBinary, start + 4);
-					if (chunkType != (uint)ChunkFormat.BIN)
-					{
-						throw new GLTFHeaderInvalidException("Second chunk must be of type BIN if present");
-					}
+            if (header.FileLength != stream.Length)
+            {
+                throw new GLTFHeaderInvalidException("File length does not match header.");
+            }
 
-					glbBuffer = new byte[chunkLength];
-					System.Buffer.BlockCopy(gltfBinary, start + 8, glbBuffer, 0, (int)chunkLength);
-				}
-			}
-			else
-			{
-				gltfContent = System.Text.Encoding.UTF8.GetString(gltfBinary);
-			}
+            int chunkLength = (int)GetUInt32(stream);   // 12
+            var chunkType = GetUInt32(stream);          // 16
+            if (chunkType != (uint)ChunkFormat.JSON)
+            {
+                throw new GLTFHeaderInvalidException("First chunk must be of type JSON");
+            }
+        }
 
-			return ParseString(gltfContent);
-		}
-
-		public static GLTFRoot ParseString(string gltfContent)
-		{
-			var stringReader = new StringReader(gltfContent);
-			return GLTFRoot.Deserialize(new JsonTextReader(stringReader));
-		}
-	}
+        private static uint GetUInt32(Stream stream)
+        {
+            var uintSize = sizeof(uint);
+            byte[] headerBuffer = new byte[uintSize];
+            stream.Read(headerBuffer, 0, uintSize);
+            return BitConverter.ToUInt32(headerBuffer, 0);
+        }
+    }
 }
 

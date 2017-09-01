@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
-using GLTF;
+using GLTFJsonSerialization;
 using UnityEngine.Networking;
 using System.Text;
 using System.IO;
@@ -38,7 +38,7 @@ public class GLTFBenchmark : MonoBehaviour
 			for (var i = 0; i < NumberOfIterations; i++)
 			{
 				timer.Start();
-				GLTFParser.ParseString(www.downloadHandler.text);
+				GLTFParser.ParseJson(new MemoryStream(www.downloadHandler.data));
 				timer.Stop();
 
 				Debug.LogFormat("Iteration {0} took: {1}ms", i, timer.ElapsedMilliseconds);
