@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using GLTFJsonSerialization;
+using GLTFSerialization;
 
 namespace UnityGLTFSerialization.Extensions
 {
@@ -29,13 +29,13 @@ namespace UnityGLTFSerialization.Extensions
         
         public static void SetUnityTransform(this Node node, Transform transform)
         {
-            node.Translation = new GLTFJsonSerialization.Math.Vector3(transform.localPosition.x, transform.localPosition.y, -transform.localPosition.z);
-            node.Rotation = new GLTFJsonSerialization.Math.Quaternion(-transform.localRotation.x, -transform.localRotation.y, transform.localRotation.z, transform.localRotation.w);
-            node.Scale = new GLTFJsonSerialization.Math.Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z);
+            node.Translation = new GLTFSerialization.Math.Vector3(transform.localPosition.x, transform.localPosition.y, -transform.localPosition.z);
+            node.Rotation = new GLTFSerialization.Math.Quaternion(-transform.localRotation.x, -transform.localRotation.y, transform.localRotation.z, transform.localRotation.w);
+            node.Scale = new GLTFSerialization.Math.Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z);
         }
 
         // todo: move to utility class
-        public static void GetTRSProperties(GLTFJsonSerialization.Math.Matrix4x4 mat, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+        public static void GetTRSProperties(GLTFSerialization.Math.Matrix4x4 mat, out Vector3 position, out Quaternion rotation, out Vector3 scale)
         {
             position = mat.GetColumn(3);
 
@@ -48,7 +48,7 @@ namespace UnityGLTFSerialization.Extensions
             rotation = Quaternion.LookRotation(mat.GetColumn(2), mat.GetColumn(1));
         }
 
-        public static Vector3 GetColumn(this GLTFJsonSerialization.Math.Matrix4x4 mat, uint columnNum)
+        public static Vector3 GetColumn(this GLTFSerialization.Math.Matrix4x4 mat, uint columnNum)
         {
             switch(columnNum)
             {
@@ -73,12 +73,12 @@ namespace UnityGLTFSerialization.Extensions
             }
         }
 
-        public static Vector2 ToUnityVector2(this GLTFJsonSerialization.Math.Vector2 vec3)
+        public static Vector2 ToUnityVector2(this GLTFSerialization.Math.Vector2 vec3)
         {
             return new Vector2(vec3.X, vec3.Y);
         }
 
-        public static Vector2[] ToUnityVector2(this GLTFJsonSerialization.Math.Vector2[] inVecArr)
+        public static Vector2[] ToUnityVector2(this GLTFSerialization.Math.Vector2[] inVecArr)
         {
             Vector2[] outVecArr = new Vector2[inVecArr.Length];
             for (int i = 0; i < inVecArr.Length; ++i)
@@ -88,12 +88,12 @@ namespace UnityGLTFSerialization.Extensions
             return outVecArr;
         }
 
-        public static Vector3 ToUnityVector3(this GLTFJsonSerialization.Math.Vector3 vec3)
+        public static Vector3 ToUnityVector3(this GLTFSerialization.Math.Vector3 vec3)
         {
             return new Vector3(vec3.X, vec3.Y, vec3.Z);
         }
 
-        public static Vector3[] ToUnityVector3(this GLTFJsonSerialization.Math.Vector3[] inVecArr)
+        public static Vector3[] ToUnityVector3(this GLTFSerialization.Math.Vector3[] inVecArr)
         {
             Vector3[] outVecArr = new Vector3[inVecArr.Length];
             for(int i = 0; i < inVecArr.Length; ++i)
@@ -103,12 +103,12 @@ namespace UnityGLTFSerialization.Extensions
             return outVecArr;
         }
 
-        public static Vector4 ToUnityVector4(this GLTFJsonSerialization.Math.Vector4 vec4)
+        public static Vector4 ToUnityVector4(this GLTFSerialization.Math.Vector4 vec4)
         {
             return new Vector4(vec4.X, vec4.Y, vec4.Z, vec4.W);
         }
 
-        public static Vector4[] ToUnityVector4(this GLTFJsonSerialization.Math.Vector4[] inVecArr)
+        public static Vector4[] ToUnityVector4(this GLTFSerialization.Math.Vector4[] inVecArr)
         {
             Vector4[] outVecArr = new Vector4[inVecArr.Length];
             for (int i = 0; i < inVecArr.Length; ++i)
@@ -118,17 +118,17 @@ namespace UnityGLTFSerialization.Extensions
             return outVecArr;
         }
 
-        public static UnityEngine.Color ToUnityColor(this GLTFJsonSerialization.Math.Color color)
+        public static UnityEngine.Color ToUnityColor(this GLTFSerialization.Math.Color color)
         {
             return new UnityEngine.Color(color.R, color.G, color.B, color.A);
         }
 
-        public static GLTFJsonSerialization.Math.Color ToNumericsColor(this UnityEngine.Color color)
+        public static GLTFSerialization.Math.Color ToNumericsColor(this UnityEngine.Color color)
         {
-            return new GLTFJsonSerialization.Math.Color(color.r, color.g, color.b, color.a);
+            return new GLTFSerialization.Math.Color(color.r, color.g, color.b, color.a);
         }
 
-        public static UnityEngine.Color[] ToUnityColor(this GLTFJsonSerialization.Math.Color[] inColorArr)
+        public static UnityEngine.Color[] ToUnityColor(this GLTFSerialization.Math.Color[] inColorArr)
         {
             UnityEngine.Color[] outColorArr = new UnityEngine.Color[inColorArr.Length];
             for (int i = 0; i < inColorArr.Length; ++i)
@@ -138,7 +138,7 @@ namespace UnityGLTFSerialization.Extensions
             return outColorArr;
         }
 
-        public static Quaternion ToUnityQuaternion(this GLTFJsonSerialization.Math.Quaternion quaternion)
+        public static Quaternion ToUnityQuaternion(this GLTFSerialization.Math.Quaternion quaternion)
         {
             return new Quaternion(quaternion.X, quaternion.Y, quaternion.Z, quaternion.W);
         }

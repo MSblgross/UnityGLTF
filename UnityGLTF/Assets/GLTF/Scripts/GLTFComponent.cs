@@ -1,16 +1,14 @@
-using System;
 using System.Collections;
-using UnityEngine;
-using System.Threading.Tasks;
-using UnityEngine.Networking;
 using System.IO;
+using UnityEngine;
 
-namespace UnityGLTFSerialization {
+namespace UnityGLTFSerialization
+{
 
-    /// <summary>
-    /// Component to load a GLTF scene with
-    /// </summary>
-    class GLTFComponent : MonoBehaviour
+	/// <summary>
+	/// Component to load a GLTF scene with
+	/// </summary>
+	class GLTFComponent : MonoBehaviour
     {
         public string Url;
         public bool Multithreaded = true;
@@ -29,7 +27,7 @@ namespace UnityGLTFSerialization {
             {
                 var fullPath = Application.streamingAssetsPath + Url;
                 gltfStream = File.OpenRead(fullPath);
-                var gltfRoot = GLTFJsonSerialization.GLTFParser.ParseJson(gltfStream);
+                var gltfRoot = GLTFSerialization.GLTFParser.ParseJson(gltfStream);
                 loader = new GLTFSceneImporter(
                     fullPath,
                     gltfRoot,

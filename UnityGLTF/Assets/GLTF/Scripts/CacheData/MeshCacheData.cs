@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using GLTFJsonSerialization;
+using GLTFSerialization;
 
 namespace UnityGLTFSerialization.CacheData
 {

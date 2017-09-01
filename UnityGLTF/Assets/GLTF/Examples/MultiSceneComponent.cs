@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityGLTFSerialization;
 using System.Collections;
-using System.Threading.Tasks;
 
 public class MultiSceneComponent : MonoBehaviour {
 

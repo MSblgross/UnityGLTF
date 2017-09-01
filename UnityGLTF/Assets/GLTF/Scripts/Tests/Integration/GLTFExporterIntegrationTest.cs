@@ -16,7 +16,7 @@ public class GLTFExporterIntegrationTest : MonoBehaviour {
 
 
 
-        IntegrationTest.Assert(root.Materials[0].AlphaMode == GLTFJsonSerialization.AlphaMode.BLEND);
+        IntegrationTest.Assert(root.Materials[0].AlphaMode == GLTFSerialization.AlphaMode.BLEND);
 
         IntegrationTest.Pass();
     }

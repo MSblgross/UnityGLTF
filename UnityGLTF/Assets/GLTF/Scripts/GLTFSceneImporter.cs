@@ -1,4 +1,4 @@
-using GLTFJsonSerialization;
+using GLTFSerialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ namespace UnityGLTFSerialization
         protected readonly Transform _sceneParent;
         protected readonly Dictionary<MaterialType, Shader> _shaderCache = new Dictionary<MaterialType, Shader>();
         public int MaximumLod = 300;
-        protected readonly GLTFJsonSerialization.Material DefaultMaterial = new GLTFJsonSerialization.Material();
+        protected readonly GLTFSerialization.Material DefaultMaterial = new GLTFSerialization.Material();
         protected string _gltfUrl;
         protected string _gltfDirectoryPath;
         protected Stream _gltfStream;
@@ -43,14 +43,14 @@ namespace UnityGLTFSerialization
         protected AsyncAction _asyncAction;
         protected byte[] _gltfData;
         protected LoadType _loadType;
-        protected Func<GLTFJsonSerialization.Material, UnityEngine.Material> _fMaterialLoadCallback;
+        protected Func<GLTFSerialization.Material, UnityEngine.Material> _fMaterialLoadCallback;
 
         /// <summary>
         /// Creates a GLTFSceneBuilder object which will be able to construct a scene based off a url
         /// </summary>
         /// <param name="gltfUrl">URL to load</param>
         /// <param name="parent"></param>
-        public GLTFSceneImporter(string gltfUrl, Transform parent = null, Func<GLTFJsonSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
+        public GLTFSceneImporter(string gltfUrl, Transform parent = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
         {
             _gltfUrl = gltfUrl;
             _gltfDirectoryPath = AbsoluteUriPath(gltfUrl);
@@ -63,7 +63,7 @@ namespace UnityGLTFSerialization
             }
         }
 
-        public GLTFSceneImporter(string rootPath, Stream stream, Transform parent = null, Func<GLTFJsonSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
+        public GLTFSceneImporter(string rootPath, Stream stream, Transform parent = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
         {
             _gltfUrl = rootPath;
             _gltfDirectoryPath = AbsoluteFilePath(rootPath);
@@ -77,7 +77,7 @@ namespace UnityGLTFSerialization
             }
         }
 
-        public GLTFSceneImporter(string rootPath, GLTFRoot rootNode, Stream glbStream = null, Func<GLTFJsonSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
+        public GLTFSceneImporter(string rootPath, GLTFRoot rootNode, Stream glbStream = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
         {
             _gltfUrl = rootPath;
             _gltfDirectoryPath = AbsoluteFilePath(rootPath);
@@ -268,7 +268,7 @@ namespace UnityGLTFSerialization
         {
             for (int i = 0; i < _root.Meshes.Count; ++i)
             {
-                GLTFJsonSerialization.Mesh mesh = _root.Meshes[i];
+                GLTFSerialization.Mesh mesh = _root.Meshes[i];
                 if(_assetCache.MeshCache[i] == null)
                 {
                     _assetCache.MeshCache[i] = new MeshCacheData();
@@ -382,7 +382,7 @@ namespace UnityGLTFSerialization
             return nodeObj;
         }
 
-        protected virtual void CreateMeshObject(GLTFJsonSerialization.Mesh mesh, Transform parent, int meshId)
+        protected virtual void CreateMeshObject(GLTFSerialization.Mesh mesh, Transform parent, int meshId)
         {
             foreach (var primitive in mesh.Primitives)
             {
@@ -458,7 +458,7 @@ namespace UnityGLTFSerialization
 
             UnityEngine.Material materialToSet = null;
             bool shouldUseDefaultMaterial = primitive.Material == null;
-            GLTFJsonSerialization.Material materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
+            GLTFSerialization.Material materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
             int materialIndex = primitive.Material != null ? primitive.Material.Id : -1;
             var material = _fMaterialLoadCallback(materialToLoad);
             MaterialCacheData materialWrapper = new MaterialCacheData
@@ -479,7 +479,7 @@ namespace UnityGLTFSerialization
             return primitiveObj;
         }
 
-        protected virtual UnityEngine.Material CreateMaterial(GLTFJsonSerialization.Material def)
+        protected virtual UnityEngine.Material CreateMaterial(GLTFSerialization.Material def)
         {
             Shader shader;
 
@@ -625,7 +625,7 @@ namespace UnityGLTFSerialization
             return material;
         }
 
-        protected virtual UnityEngine.Texture CreateTexture(GLTFJsonSerialization.Texture texture)
+        protected virtual UnityEngine.Texture CreateTexture(GLTFSerialization.Texture texture)
         {
             if (_assetCache.TextureCache[texture.Source.Id] == null)
             {
@@ -660,10 +660,10 @@ namespace UnityGLTFSerialization
 
                     switch (sampler.WrapS)
                     {
-                        case GLTFJsonSerialization.WrapMode.ClampToEdge:
+                        case GLTFSerialization.WrapMode.ClampToEdge:
                             desiredWrapMode = UnityEngine.TextureWrapMode.Clamp;
                             break;
-                        case GLTFJsonSerialization.WrapMode.Repeat:
+                        case GLTFSerialization.WrapMode.Repeat:
                         default:
                             desiredWrapMode = UnityEngine.TextureWrapMode.Repeat;
                             break;
@@ -772,7 +772,7 @@ namespace UnityGLTFSerialization
         /// <summary>
         /// Load the remote URI data into a byte array.
         /// </summary>
-        protected virtual IEnumerator LoadBufferFromURI(string sourceUri, GLTFJsonSerialization.Buffer buffer, int bufferIndex)
+        protected virtual IEnumerator LoadBufferFromURI(string sourceUri, GLTFSerialization.Buffer buffer, int bufferIndex)
         {
             if (_assetCache.BufferCache[bufferIndex] == null || _assetCache.BufferCache[bufferIndex].Stream == null)
             {
@@ -806,7 +806,7 @@ namespace UnityGLTFSerialization
         protected virtual void LoadBufferFromStream(int bufferIndex)
         {
             _assetCache.BufferCache[bufferIndex] = new BufferCacheData();
-            GLTFJsonSerialization.Buffer buffer = _root.Buffers[bufferIndex];
+            GLTFSerialization.Buffer buffer = _root.Buffers[bufferIndex];
             if (buffer.Uri != null)
             {
                 var pathToLoad = Path.Combine(_gltfDirectoryPath, buffer.Uri);

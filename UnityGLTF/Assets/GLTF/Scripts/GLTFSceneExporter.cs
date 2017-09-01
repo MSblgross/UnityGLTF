@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
-using GLTFJsonSerialization;
+using GLTFSerialization;
 using UnityGLTFSerialization.Extensions;
 
 namespace UnityGLTFSerialization
@@ -13,7 +13,7 @@ namespace UnityGLTFSerialization
         private Transform[] _rootTransforms;
         private GLTFRoot _root;
         private BufferId _bufferId;
-        private GLTFJsonSerialization.Buffer _buffer;
+        private GLTFSerialization.Buffer _buffer;
         private BinaryWriter _bufferWriter;
         private List<Texture2D> _images;
         private List<UnityEngine.Texture> _textures;
@@ -41,22 +41,22 @@ namespace UnityGLTFSerialization
                 Asset = new Asset {
                     Version = "2.0"
                 },
-                Buffers = new List<GLTFJsonSerialization.Buffer>(),
+                Buffers = new List<GLTFSerialization.Buffer>(),
                 BufferViews = new List<BufferView>(),
                 Images = new List<Image>(),
-                Materials = new List<GLTFJsonSerialization.Material>(),
-                Meshes = new List<GLTFJsonSerialization.Mesh>(),
+                Materials = new List<GLTFSerialization.Material>(),
+                Meshes = new List<GLTFSerialization.Mesh>(),
                 Nodes = new List<Node>(),
                 Samplers = new List<Sampler>(),
                 Scenes = new List<Scene>(),
-                Textures = new List<GLTFJsonSerialization.Texture>(),
+                Textures = new List<GLTFSerialization.Texture>(),
             };
 
             _images = new List<Texture2D>();
             _materials = new List<UnityEngine.Material>();
             _textures = new List<UnityEngine.Texture>();
 
-            _buffer = new GLTFJsonSerialization.Buffer();
+            _buffer = new GLTFSerialization.Buffer();
             _bufferId = new BufferId {
                 Id = _root.Buffers.Count,
                 Root = _root
@@ -251,7 +251,7 @@ namespace UnityGLTFSerialization
                 return existingMeshId;
 
             // if not, create new mesh and return its id
-            var mesh = new GLTFJsonSerialization.Mesh();
+            var mesh = new GLTFSerialization.Mesh();
 
             if (ExportNames)
             {
@@ -368,7 +368,7 @@ namespace UnityGLTFSerialization
                 return id;
             }
 
-            var material = new GLTFJsonSerialization.Material();
+            var material = new GLTFSerialization.Material();
 
             if (ExportNames)
             {
@@ -585,7 +585,7 @@ namespace UnityGLTFSerialization
                 return id;
             }
 
-            var texture = new GLTFJsonSerialization.Texture();
+            var texture = new GLTFSerialization.Texture();
 
             if (ExportNames)
             {
@@ -646,13 +646,13 @@ namespace UnityGLTFSerialization
 
             if (texture.wrapMode == TextureWrapMode.Clamp)
             {
-                sampler.WrapS = GLTFJsonSerialization.WrapMode.ClampToEdge;
-                sampler.WrapT = GLTFJsonSerialization.WrapMode.ClampToEdge;
+                sampler.WrapS = GLTFSerialization.WrapMode.ClampToEdge;
+                sampler.WrapT = GLTFSerialization.WrapMode.ClampToEdge;
             }
             else
             {
-                sampler.WrapS = GLTFJsonSerialization.WrapMode.Repeat;
-                sampler.WrapT = GLTFJsonSerialization.WrapMode.Repeat;
+                sampler.WrapS = GLTFSerialization.WrapMode.Repeat;
+                sampler.WrapT = GLTFSerialization.WrapMode.Repeat;
             }
 
             if(texture.filterMode == FilterMode.Point)
@@ -1216,8 +1216,8 @@ namespace UnityGLTFSerialization
                     || textureObj.filterMode == FilterMode.Bilinear && filterIsLinear
                     || textureObj.filterMode == FilterMode.Trilinear && root.Samplers[i].MinFilter == MinFilterMode.LinearMipmapLinear;
 
-                bool wrapMatched = textureObj.wrapMode == TextureWrapMode.Clamp && root.Samplers[i].WrapS == GLTFJsonSerialization.WrapMode.ClampToEdge
-                    || textureObj.wrapMode == TextureWrapMode.Repeat && root.Samplers[i].WrapS != GLTFJsonSerialization.WrapMode.ClampToEdge;
+                bool wrapMatched = textureObj.wrapMode == TextureWrapMode.Clamp && root.Samplers[i].WrapS == GLTFSerialization.WrapMode.ClampToEdge
+                    || textureObj.wrapMode == TextureWrapMode.Repeat && root.Samplers[i].WrapS != GLTFSerialization.WrapMode.ClampToEdge;
 
                 if (filterMatched && wrapMatched)
                 {

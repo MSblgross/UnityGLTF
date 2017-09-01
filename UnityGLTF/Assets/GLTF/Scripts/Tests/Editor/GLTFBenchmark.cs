@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
-using GLTFJsonSerialization;
+using GLTFSerialization;
 using UnityEngine.Networking;
 using System.Text;
 using System.IO;
