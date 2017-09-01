@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using GLTFJsonSerialization.JsonExtensions;
+using GLTFSerialization.JsonExtensions;
 using Newtonsoft.Json;
-using GLTFJsonSerialization.Math;
+using GLTFSerialization.Math;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     /// <summary>
     /// The root object for a glTF asset.
@@ -176,7 +176,7 @@ namespace GLTFJsonSerialization
                         root.Scene = SceneId.Deserialize(root, jsonReader);
                         break;
                     case "scenes":
-                        root.Scenes = jsonReader.ReadList(() => GLTFJsonSerialization.Scene.Deserialize(root, jsonReader));
+                        root.Scenes = jsonReader.ReadList(() => GLTFSerialization.Scene.Deserialize(root, jsonReader));
                         break;
                     case "skins":
                         root.Skins = jsonReader.ReadList(() => Skin.Deserialize(root, jsonReader));

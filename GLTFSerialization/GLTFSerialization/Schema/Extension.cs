@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public interface Extension
     {

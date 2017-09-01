@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     /// <summary>
     /// A camera's projection.  A node can reference a camera to apply a transform

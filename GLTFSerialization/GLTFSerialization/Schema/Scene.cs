@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     /// <summary>
     /// The root nodes of a scene.

@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public class OcclusionTextureInfo : TextureInfo
     {

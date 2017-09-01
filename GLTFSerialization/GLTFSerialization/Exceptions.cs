@@ -1,6 +1,6 @@
 using System;
 
-namespace GLTF
+namespace GLTFSerialization
 {
 	[Serializable()]
 	public class GLTFHeaderInvalidException : Exception

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     /// <summary>
     /// A buffer points to binary geometry, animation, or skins.

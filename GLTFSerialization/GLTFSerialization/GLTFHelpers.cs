@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public static class GLTFHelpers
     {

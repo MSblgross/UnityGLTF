@@ -1,4 +1,4 @@
-﻿namespace GLTFJsonSerialization.Math
+﻿namespace GLTFSerialization.Math
 {
     // class is naively implemented
     public class Matrix4x4

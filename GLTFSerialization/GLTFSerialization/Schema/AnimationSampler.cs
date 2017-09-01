@@ -1,7 +1,7 @@
-using GLTFJsonSerialization.JsonExtensions;
+using GLTFSerialization.JsonExtensions;
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public enum InterpolationType
     {

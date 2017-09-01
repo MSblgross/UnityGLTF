@@ -1,10 +1,10 @@
-using GLTFJsonSerialization.Math;
+using GLTFSerialization.Math;
 using System.Collections;
 using System;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public class GLTFParser
     {

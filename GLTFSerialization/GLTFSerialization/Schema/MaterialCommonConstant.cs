@@ -1,10 +1,10 @@
 
 using System;
-using GLTFJsonSerialization.JsonExtensions;
+using GLTFSerialization.JsonExtensions;
 using Newtonsoft.Json;
-using GLTFJsonSerialization.Math;
+using GLTFSerialization.Math;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public class MaterialCommonConstant : GLTFProperty
     {

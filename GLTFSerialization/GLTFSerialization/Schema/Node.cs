@@ -1,9 +1,9 @@
-using GLTFJsonSerialization.Math;
+using GLTFSerialization.Math;
 using System.Collections.Generic;
-using GLTFJsonSerialization.JsonExtensions;
+using GLTFSerialization.JsonExtensions;
 using Newtonsoft.Json;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     /// <summary>
     /// A node in the node hierarchy.

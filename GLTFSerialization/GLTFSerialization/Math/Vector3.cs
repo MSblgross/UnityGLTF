@@ -1,4 +1,4 @@
-﻿namespace GLTFJsonSerialization.Math
+﻿namespace GLTFSerialization.Math
 {
     public struct Vector3
     {

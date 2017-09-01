@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using GLTFJsonSerialization.JsonExtensions;
+using GLTFSerialization.JsonExtensions;
 using Newtonsoft.Json;
-using GLTFJsonSerialization.Math;
+using GLTFSerialization.Math;
 using System.Runtime.InteropServices;
 
 using System.IO;
 
-namespace GLTFJsonSerialization
+namespace GLTFSerialization
 {
     public class Accessor : GLTFChildOfRootProperty
     {

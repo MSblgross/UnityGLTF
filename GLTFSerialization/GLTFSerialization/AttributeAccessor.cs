@@ -1,4 +1,4 @@
-﻿namespace GLTFJsonSerialization
+﻿namespace GLTFSerialization
 {
     public class AttributeAccessor
     {
