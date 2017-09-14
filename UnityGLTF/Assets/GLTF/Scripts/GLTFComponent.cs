@@ -9,7 +9,7 @@ namespace UnityGLTFSerialization {
 	/// <summary>
 	/// Component to load a GLTF scene with
 	/// </summary>
-	class GLTFComponent : MonoBehaviour
+	public class GLTFComponent : MonoBehaviour
 	{
 		public string Url;
 		public bool Multithreaded = true;
@@ -17,8 +17,8 @@ namespace UnityGLTFSerialization {
 
 		public int MaximumLod = 300;
 
-		public Shader GLTFStandard;
-		public Shader GLTFConstant;
+		public Shader GLTFStandard = null;
+		public Shader GLTFConstant = null;
 
 		IEnumerator Start()
 		{
@@ -26,12 +26,13 @@ namespace UnityGLTFSerialization {
 			FileStream gltfStream = null;
 			if (UseStream)
 			{
-				var fullPath = Application.streamingAssetsPath + Url;
+				var fullPath = Application.streamingAssetsPath + Path.DirectorySeparatorChar + Url;
 				gltfStream = File.OpenRead(fullPath);
+				var gltfRoot = GLTFSerialization.GLTFParser.ParseJson(gltfStream);
 				loader = new GLTFSceneImporter(
 					fullPath,
-					gltfStream,
-					gameObject.transform
+					gltfRoot,
+					gltfStream
 					);
 			}
 			else
@@ -45,10 +46,20 @@ namespace UnityGLTFSerialization {
 			loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.PbrMetallicRoughness, GLTFStandard);
 			loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.CommonConstant, GLTFConstant);
 			loader.MaximumLod = MaximumLod;
-			yield return loader.Load(-1, Multithreaded);
 			if(gltfStream != null)
 			{
+				GameObject node = loader.LoadNode(0);
+				node.transform.SetParent(gameObject.transform, false);
+
+#if !WINDOWS_UWP
 				gltfStream.Close();
+#else
+				gltfStream.Dispose();
+#endif
+			}
+			else
+			{
+				yield return loader.LoadScene(-1, Multithreaded);
 			}
 		}
 	}

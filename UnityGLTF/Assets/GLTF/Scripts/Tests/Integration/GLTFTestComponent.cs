@@ -17,7 +17,7 @@ public class GLTFTestComponent : MonoBehaviour {
 			);
 
 		loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.PbrMetallicRoughness, GLTFStandard);
-		yield return loader.Load(-1, Multithreaded);
+		yield return loader.LoadScene(-1, Multithreaded);
 		IntegrationTest.Pass();
 	}
 }

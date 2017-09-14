@@ -2,7 +2,7 @@
 
 public class VisualizeMeshAttributes : MonoBehaviour
 {
-	[SerializeField] private MeshFilter Mesh;
+	[SerializeField] private MeshFilter Mesh = null;
 	[SerializeField] private float NormalScale = 0.1f;
 	[SerializeField] private float TangentScale = 0.1f;
 	[SerializeField] private bool VisualizeTangents = false;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GLTFSerialization;
 using System.Text;
+using System.IO;
 
 namespace GLTFJsonSerializerTests
 {
@@ -19,7 +20,13 @@ namespace GLTFJsonSerializerTests
 			}
 		";
 
-			var testRoot = GLTFParser.ParseJson(Encoding.ASCII.GetBytes(testStr));
+			MemoryStream stream = new MemoryStream();
+			StreamWriter writer = new StreamWriter(stream);
+			writer.Write(testStr);
+			writer.Flush();
+			stream.Position = 0;
+
+			var testRoot = GLTFParser.ParseJson(stream);
 
 			Assert.AreEqual(testRoot.Asset.Version, "2.0");
 		}
