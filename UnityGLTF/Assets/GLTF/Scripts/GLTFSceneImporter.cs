@@ -9,15 +9,10 @@ using UnityEngine.Networking;
 using UnityEngine.Rendering;
 using UnityGLTFSerialization.CacheData;
 using UnityGLTFSerialization.Extensions;
+using UnityGLTFSerialization.Loader;
 
 namespace UnityGLTFSerialization
 {
-	public enum LoadType
-	{
-		Uri,
-		Stream
-	}
-
 	public class GLTFSceneImporter
 	{
 		public enum MaterialType
@@ -31,63 +26,49 @@ namespace UnityGLTFSerialization
 		}
 
 		protected GameObject _lastLoadedScene;
-		protected readonly Transform _sceneParent;
 		protected readonly Dictionary<MaterialType, Shader> _shaderCache = new Dictionary<MaterialType, Shader>();
 		public int MaximumLod = 300;
 		protected readonly GLTFSerialization.Material DefaultMaterial = new GLTFSerialization.Material();
-		protected string _gltfUrl;
-		protected string _gltfDirectoryPath;
+		protected string _gltfFileName;
 		protected Stream _gltfStream;
-		protected GLTFRoot _root;
+		protected GLTFRoot _gltfRoot;
 		protected AssetCache _assetCache;
 		protected AsyncAction _asyncAction;
 		protected byte[] _gltfData;
-		protected LoadType _loadType;
 		protected Func<GLTFSerialization.Material, UnityEngine.Material> _fMaterialLoadCallback;
+		protected ILoader _loader;
 
 		/// <summary>
 		/// Creates a GLTFSceneBuilder object which will be able to construct a scene based off a url
 		/// </summary>
-		/// <param name="gltfUrl">URL to load</param>
+		/// <param name="gltfFileName">glTF file relative to data loader path</param>
 		/// <param name="parent"></param>
-		public GLTFSceneImporter(string gltfUrl, Transform parent = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
+		public GLTFSceneImporter(string gltfFileName, ILoader externalDataLoader) : this(externalDataLoader)
 		{
-			_gltfUrl = gltfUrl;
-			_gltfDirectoryPath = AbsoluteUriPath(gltfUrl);
-			_sceneParent = parent;
-			_asyncAction = new AsyncAction();
-			_loadType = LoadType.Uri;
-			if (materialLoadCallback == null)
-			{
-				_fMaterialLoadCallback = CreateMaterial;
-			}
+			_gltfFileName = gltfFileName;
 		}
 
-		public GLTFSceneImporter(string rootPath, Stream stream, Transform parent = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
+		public GLTFSceneImporter(GLTFRoot rootNode, ILoader externalDataLoader, Stream glbStream = null) : this(externalDataLoader)
 		{
-			_gltfUrl = rootPath;
-			_gltfDirectoryPath = AbsoluteFilePath(rootPath);
-			_gltfStream = stream;
-			_sceneParent = parent;
-			_asyncAction = new AsyncAction();
-			_loadType = LoadType.Stream;
-			if (materialLoadCallback == null)
-			{
-				_fMaterialLoadCallback = CreateMaterial;
-			}
-		}
-
-		public GLTFSceneImporter(string rootPath, GLTFRoot rootNode, Stream glbStream = null, Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback = null)
-		{
-			_gltfUrl = rootPath;
-			_gltfDirectoryPath = AbsoluteFilePath(rootPath);
-			_root = rootNode;
-			_loadType = LoadType.Stream;
+			_gltfRoot = rootNode;
+			_loader = externalDataLoader;
 			_gltfStream = glbStream;
-			if (materialLoadCallback == null)
-			{
-				_fMaterialLoadCallback = CreateMaterial;
-			}
+		}
+
+		private GLTFSceneImporter(ILoader externalDataLoader)
+		{
+			_loader = externalDataLoader;
+			_asyncAction = new AsyncAction();
+			_fMaterialLoadCallback = CreateMaterial;
+		}
+
+		/// <summary>
+		/// Sets the callback to use for loading materials
+		/// </summary>
+		/// <param name="materialLoadCallback">Callback function to pass in</param>
+		public void SetMaterialCallback(Func<GLTFSerialization.Material, UnityEngine.Material> materialLoadCallback)
+		{
+			_fMaterialLoadCallback = materialLoadCallback;
 		}
 
 		public GameObject LastLoadedScene
@@ -112,28 +93,10 @@ namespace UnityGLTFSerialization
 		/// Loads via a web call the gltf file
 		/// </summary>
 		/// <returns></returns>
-		public IEnumerator LoadJson()
+		public void LoadJson(string jsonFilePath)
 		{
-			if (_loadType == LoadType.Uri)
-			{
-				var www = UnityWebRequest.Get(_gltfUrl);
-
-				yield return www.Send();
-				if (www.responseCode >= 400)
-				{
-					Debug.LogErrorFormat("{0} - {1}", www.responseCode, www.url);
-					yield break;
-				}
-
-				_gltfData = www.downloadHandler.data;
-				_gltfStream = new MemoryStream(_gltfData, 0, _gltfData.Length, false, true);
-			}
-			else if(_loadType != LoadType.Stream)
-			{
-				throw new Exception("Invalid load type specified: " + _loadType);
-			}
-
-			_root = GLTFParser.ParseJson(_gltfStream);
+			_gltfStream = _loader.LoadJSON(jsonFilePath);
+			_gltfRoot = GLTFParser.ParseJson(_gltfStream);
 		}
 		
 		/// <summary>
@@ -143,16 +106,16 @@ namespace UnityGLTFSerialization
 		/// <param name="isMultithreaded">Whether to do loading operation on a thread</param>
 		public IEnumerator LoadScene(int sceneIndex = -1, bool isMultithreaded = false)
 		{
-			if(_root == null)
+			if(_gltfRoot == null)
 			{
-				yield return LoadJson();
+				LoadJson(_gltfFileName);
 			}
 			yield return ImportScene(sceneIndex, isMultithreaded);
 		}
 
 		public GameObject LoadNode(int nodeIndex)
 		{
-			if (_root == null)
+			if (_gltfRoot == null)
 			{
 				throw new InvalidOperationException("GLTF root must first be loaded and parsed");
 			}
@@ -167,22 +130,22 @@ namespace UnityGLTFSerialization
 
 		private GameObject _LoadNode(int nodeIndex)
 		{
-			if(nodeIndex >= _root.Nodes.Count)
+			if(nodeIndex >= _gltfRoot.Nodes.Count)
 			{
 				throw new ArgumentException("nodeIndex is out of range");
 			}
 
-			return CreateNode(_root.Nodes[nodeIndex]);
+			return CreateNode(_gltfRoot.Nodes[nodeIndex]);
 		}
 
 		protected void InitializeAssetCache()
 		{
 			_assetCache = new AssetCache(
-				_root.Images != null ? _root.Images.Count : 0,
-				_root.Textures != null ? _root.Textures.Count : 0,
-				_root.Materials != null ? _root.Materials.Count : 0,
-				_root.Buffers != null ? _root.Buffers.Count : 0,
-				_root.Meshes != null ? _root.Meshes.Count : 0
+				_gltfRoot.Images != null ? _gltfRoot.Images.Count : 0,
+				_gltfRoot.Textures != null ? _gltfRoot.Textures.Count : 0,
+				_gltfRoot.Materials != null ? _gltfRoot.Materials.Count : 0,
+				_gltfRoot.Buffers != null ? _gltfRoot.Buffers.Count : 0,
+				_gltfRoot.Meshes != null ? _gltfRoot.Meshes.Count : 0
 				);
 		}
 		
@@ -195,13 +158,13 @@ namespace UnityGLTFSerialization
 		protected IEnumerator ImportScene(int sceneIndex = -1, bool isMultithreaded = false)
 		{
 			Scene scene;
-			if (sceneIndex >= 0 && sceneIndex < _root.Scenes.Count)
+			if (sceneIndex >= 0 && sceneIndex < _gltfRoot.Scenes.Count)
 			{
-				scene = _root.Scenes[sceneIndex];
+				scene = _gltfRoot.Scenes[sceneIndex];
 			}
 			else
 			{
-				scene = _root.GetDefaultScene();
+				scene = _gltfRoot.GetDefaultScene();
 			}
 
 			if (scene == null)
@@ -213,28 +176,34 @@ namespace UnityGLTFSerialization
 			{
 				InitializeAssetCache();
 				
-				if (_root.Buffers != null)
+				if (_gltfRoot.Buffers != null)
 				{
 					// todo add fuzzing to verify that buffers are before uri
-					for(int i = 0; i < _root.Buffers.Count; ++i)
+					for(int i = 0; i < _gltfRoot.Buffers.Count; ++i)
 					{
-						var buffer = _root.Buffers[i];
-						if (_loadType == LoadType.Stream || buffer.Uri == null)
+						var buffer = _gltfRoot.Buffers[i];
+						if (_assetCache.BufferCache[i] == null)
 						{
-							LoadBufferFromStream(i);
-						}
-						else if(_loadType == LoadType.Uri)
-						{
-							yield return LoadBufferFromURI(_gltfDirectoryPath, buffer, i);
+							if (buffer.Uri == null)
+							{
+								_assetCache.BufferCache[i] = LoadBufferFromGLB(i);
+							}
+							else
+							{
+								_assetCache.BufferCache[i] = new BufferCacheData()
+								{
+									Stream = _loader.LoadBuffer(buffer)
+								};
+							}
 						}
 					}
 				}
 				
-				if (_root.Images != null)
+				if (_gltfRoot.Images != null)
 				{
-					for(int i = 0; i < _root.Images.Count; ++i)
+					for(int i = 0; i < _gltfRoot.Images.Count; ++i)
 					{
-						Image image = _root.Images[i];
+						Image image = _gltfRoot.Images[i];
 						if (_loadType == LoadType.Stream || image.Uri == null)
 						{
 							LoadImageFromStream(_gltfDirectoryPath, image, i);
@@ -266,9 +235,9 @@ namespace UnityGLTFSerialization
 
 		protected virtual void BuildAttributesForMeshes()
 		{
-			for (int i = 0; i < _root.Meshes.Count; ++i)
+			for (int i = 0; i < _gltfRoot.Meshes.Count; ++i)
 			{
-				GLTFSerialization.Mesh mesh = _root.Meshes[i];
+				GLTFSerialization.Mesh mesh = _gltfRoot.Meshes[i];
 				if(_assetCache.MeshCache[i] == null)
 				{
 					_assetCache.MeshCache[i] = new MeshCacheData();
@@ -287,18 +256,29 @@ namespace UnityGLTFSerialization
 				Dictionary<string, AttributeAccessor> attributeAccessors = new Dictionary<string, AttributeAccessor>(primitive.Attributes.Count + 1);
 				foreach (var attributePair in primitive.Attributes)
 				{
-					int bufferId = attributePair.Value.Value.BufferView.Value.Buffer.Id;
+					BufferId bufferIdPair = attributePair.Value.Value.BufferView.Value.Buffer;
+					GLTFSerialization.Buffer buffer = bufferIdPair.Value;
+					int bufferId = bufferIdPair.Id;
 
 					// on cache miss, load the buffer
-					if(_assetCache.BufferCache[bufferId] == null || _assetCache.BufferCache[bufferId].Stream == null)
+					if(_assetCache.BufferCache[bufferId] == null)
 					{
-						if (_loadType == LoadType.Stream)
+						if(buffer.Uri == null)
 						{
-							LoadBufferFromStream(bufferId);
+							GLTFParser.SeekToBinaryChunk(_gltfStream, bufferId);
+							_assetCache.BufferCache[bufferId] = new BufferCacheData()
+							{
+								Stream = _gltfStream,
+								ChunkOffset = _gltfStream.Position
+							};
 						}
 						else
 						{
-							throw new InvalidOperationException("Cannot load buffer \"just in time\" for type: " + _loadType);
+							yield return _loader.LoadBuffer(buffer);
+							_assetCache.BufferCache[bufferId] = new BufferCacheData()
+							{
+								Stream = _loader.LoadedBuffer
+							};
 						}
 					}
 
@@ -488,7 +468,7 @@ namespace UnityGLTFSerialization
 			{
 				if (def.PbrMetallicRoughness != null)
 					shader = _shaderCache[MaterialType.PbrMetallicRoughness];
-				else if (_root.ExtensionsUsed != null && _root.ExtensionsUsed.Contains("KHR_materials_common")
+				else if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains("KHR_materials_common")
 						 && def.CommonConstant != null)
 					shader = _shaderCache[MaterialType.CommonConstant];
 				else
@@ -633,7 +613,7 @@ namespace UnityGLTFSerialization
 				{
 					if(_loadType == LoadType.Stream)
 					{
-						LoadImageFromStream(_gltfDirectoryPath, _root.Images[texture.Source.Id], texture.Source.Id);
+						LoadImageFromStream(_gltfDirectoryPath, _gltfRoot.Images[texture.Source.Id], texture.Source.Id);
 					}
 					else
 					{
@@ -686,7 +666,6 @@ namespace UnityGLTFSerialization
 			return _assetCache.TextureCache[texture.Source.Id];
 		}
 
-		protected const string Base64StringInitializer = "^data:[a-z-]+/[a-z-]+;base64,";
 
 		protected virtual IEnumerator LoadImageFromURI(string rootPath, Image image, int imageID)
 		{
@@ -803,24 +782,14 @@ namespace UnityGLTFSerialization
 			}
 		}
 
-		protected virtual void LoadBufferFromStream(int bufferIndex)
+		protected virtual BufferCacheData LoadBufferFromGLB(int bufferIndex)
 		{
-			_assetCache.BufferCache[bufferIndex] = new BufferCacheData();
-			GLTFSerialization.Buffer buffer = _root.Buffers[bufferIndex];
-			if (buffer.Uri != null)
+			GLTFParser.SeekToBinaryChunk(_gltfStream, bufferIndex);  // sets stream to correct start position
+			return new BufferCacheData
 			{
-				var pathToLoad = Path.Combine(_gltfDirectoryPath, buffer.Uri);
-				_assetCache.BufferCache[bufferIndex].Stream = File.OpenRead(pathToLoad);
-			}
-			else //null buffer uri indicates GLB buffer loading
-			{
-				GLTFParser.SeekToBinaryChunk(_gltfStream, bufferIndex);  // sets stream to correct start position
-				_assetCache.BufferCache[bufferIndex] = new BufferCacheData
-				{
-					Stream = _gltfStream,
-					ChunkOffset = _gltfStream.Position
-				};
-			}
+				Stream = _gltfStream,
+				ChunkOffset = _gltfStream.Position
+			};
 		}
 
 		/// <summary>
