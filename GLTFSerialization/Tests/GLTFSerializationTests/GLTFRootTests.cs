@@ -1,9 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using GLTFSerialization;
 using System.Text;
+using GLTF;
 using System.IO;
 
-namespace GLTFJsonSerializerTests
+namespace GLTFSerializationTests
 {
 	[TestClass]
 	public class GLTFRootTest

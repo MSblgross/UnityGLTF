@@ -1,9 +1,9 @@
-using GLTFSerialization.Math;
 using System.Collections.Generic;
-using GLTFSerialization.JsonExtensions;
+using GLTF.Extensions;
+using GLTF.Math;
 using Newtonsoft.Json;
 
-namespace GLTFSerialization
+namespace GLTF.Schema
 {
 	/// <summary>
 	/// A node in the node hierarchy.
@@ -93,11 +93,10 @@ namespace GLTFSerialization
 						break;
 					case "matrix":
 						var list = reader.ReadDoubleList();
+						// gltf has column ordered matricies
 						var mat = new Matrix4x4(
-							(float)list[0],  (float)list[1],  (float)list[2],  (float)list[3],
-							(float)list[4],  (float)list[5],  (float)list[6],  (float)list[7],
-							(float)list[8],  (float)list[9],  (float)list[10], (float)list[11],  
-							(float)list[12], (float)list[13], (float)list[14], (float)list[15]
+							(float)list[0],  (float)list[1],  (float)list[2],  (float)list[3], (float)list[4],  (float)list[5],  (float)list[6],  (float)list[7],
+							(float)list[8],  (float)list[9],  (float)list[10], (float)list[11], (float)list[12], (float)list[13], (float)list[14], (float)list[15]
 							);
 
 						node.Matrix = mat;
