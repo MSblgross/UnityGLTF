@@ -34,7 +34,7 @@ namespace UnityGLTF.Loader
 				throw new ArgumentNullException("buffer");
 			}
 
-			if(buffer.Uri != null)
+			if(buffer.Uri == null)
 			{
 				throw new ArgumentException("Cannot load buffer with null URI. Should be loaded via GLB method instead", "buffer");
 			}
@@ -78,20 +78,24 @@ namespace UnityGLTF.Loader
 			}
 			else
 			{
-				Stream requestStream = CreateHTTPRequest(_rootURI, uri);
+				Stream responseStream = CreateHTTPRequest(_rootURI, uri);
 				
-				if (requestStream != null)
+				if (responseStream != null)
 				{
 					texture = new Texture2D(0, 0);
-					if(requestStream.Length > int.MaxValue)
+					if(responseStream.Length > int.MaxValue)
 					{
 						throw new Exception("Stream is larger than can be copied into byte array");
 					}
 
-					byte[] streamAsBytes = new byte[requestStream.Length];
-					requestStream.Read(streamAsBytes, 0, (int)requestStream.Length);
-					texture.LoadRawTextureData(streamAsBytes);
-					texture.Apply(true);
+					byte[] streamAsBytes = new byte[responseStream.Length];
+					responseStream.Read(streamAsBytes, 0, (int)responseStream.Length);
+#if !WINDOWS_UWP
+					responseStream.Close();
+#else
+					responseStream.Dispose();
+#endif
+					texture.LoadImage(streamAsBytes);
 				}
 			}
 
@@ -101,15 +105,32 @@ namespace UnityGLTF.Loader
 		private Stream CreateHTTPRequest(string rootUri, string httpRequestPath)
 		{
 			HttpWebRequest www = (HttpWebRequest)WebRequest.Create(Path.Combine(_rootURI, httpRequestPath));
+			www.Timeout = 5000;
 			HttpWebResponse webResponse = (HttpWebResponse)www.GetResponse();
-
+			
 			if ((int)webResponse.StatusCode >= 400)
 			{
 				Debug.LogErrorFormat("{0} - {1}", webResponse.StatusCode, webResponse.ResponseUri);
 				return null;
 			}
+			
+			if (webResponse.ContentLength > int.MaxValue)
+			{
+				throw new Exception("Stream is larger than can be copied into byte array");
+			}
 
-			return webResponse.GetResponseStream();
+			Stream responseStream = webResponse.GetResponseStream();
+			MemoryStream memoryStream = new MemoryStream((int)webResponse.ContentLength);
+
+			byte[] chunk = new byte[4096];
+			int bytesRead;
+			while((bytesRead = responseStream.Read(chunk, 0, chunk.Length)) > 0)
+			{
+				memoryStream.Write(chunk, 0, bytesRead);
+			}
+			File.WriteAllBytes(Application.streamingAssetsPath + Path.DirectorySeparatorChar + "temp" + Path.DirectorySeparatorChar + httpRequestPath, chunk);
+			webResponse.Close();
+			return memoryStream;
 		}
 	}
 }

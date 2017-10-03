@@ -1,10 +1,10 @@
+using GLTF;
+using GLTF.Schema;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using GLTF;
-using GLTF.Schema;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Rendering;
@@ -16,6 +16,209 @@ namespace UnityGLTF
 {
 	public class GLTFSceneImporter
 	{
+		private string boomBoxGLTF = @"{
+  ""accessors"": [
+    {
+      ""bufferView"": 0,
+      ""componentType"": 5126,
+      ""count"": 3575,
+      ""type"": ""VEC2"",
+      ""max"": [
+        0.9999003,
+        -0.0221377648
+      ],
+      ""min"": [
+        0.0006585993,
+        -0.996773958
+      ]
+    },
+    {
+      ""bufferView"": 1,
+      ""componentType"": 5126,
+      ""count"": 3575,
+      ""type"": ""VEC3"",
+      ""max"": [
+        1.0,
+        1.0,
+        0.9999782
+      ],
+      ""min"": [
+        -1.0,
+        -1.0,
+        -0.9980823
+      ]
+    },
+    {
+      ""bufferView"": 2,
+      ""componentType"": 5126,
+      ""count"": 3575,
+      ""type"": ""VEC4"",
+      ""max"": [
+        1.0,
+        0.9999976,
+        1.0,
+        1.0
+      ],
+      ""min"": [
+        -0.9991289,
+        -0.999907851,
+        -1.0,
+        1.0
+      ]
+    },
+    {
+      ""bufferView"": 3,
+      ""componentType"": 5126,
+      ""count"": 3575,
+      ""type"": ""VEC3"",
+      ""max"": [
+        0.009921154,
+        0.00977163,
+        0.0100762453
+      ],
+      ""min"": [
+        -0.009921154,
+        -0.00977163,
+        -0.0100762453
+      ]
+    },
+    {
+      ""bufferView"": 4,
+      ""componentType"": 5123,
+      ""count"": 18108,
+      ""type"": ""SCALAR"",
+      ""max"": [
+        3574
+      ],
+      ""min"": [
+        0
+      ]
+    }
+  ],
+  ""asset"": {
+    ""generator"": ""glTF Tools for Unity"",
+    ""version"": ""2.0""
+  },
+  ""bufferViews"": [
+    {
+      ""buffer"": 0,
+      ""byteLength"": 28600
+    },
+    {
+      ""buffer"": 0,
+      ""byteOffset"": 28600,
+      ""byteLength"": 42900
+    },
+    {
+      ""buffer"": 0,
+      ""byteOffset"": 71500,
+      ""byteLength"": 57200
+    },
+    {
+      ""buffer"": 0,
+      ""byteOffset"": 128700,
+      ""byteLength"": 42900
+    },
+    {
+      ""buffer"": 0,
+      ""byteOffset"": 171600,
+      ""byteLength"": 36216
+    }
+  ],
+  ""buffers"": [
+    {
+      ""uri"": ""BoomBox.bin"",
+      ""byteLength"": 207816
+    }
+  ],
+  ""images"": [
+    {
+      ""uri"": ""BoomBox_baseColor.png""
+    },
+    {
+      ""uri"": ""BoomBox_occlusionRoughnessMetallic.png""
+    },
+    {
+      ""uri"": ""BoomBox_normal.png""
+    },
+    {
+      ""uri"": ""BoomBox_emissive.png""
+    }
+  ],
+  ""meshes"": [
+    {
+      ""primitives"": [
+        {
+          ""attributes"": {
+            ""TEXCOORD_0"": 0,
+            ""NORMAL"": 1,
+            ""TANGENT"": 2,
+            ""POSITION"": 3
+          },
+          ""indices"": 4,
+          ""material"": 0
+        }
+      ],
+      ""name"": ""BoomBox""
+    }
+  ],
+  ""materials"": [
+    {
+      ""pbrMetallicRoughness"": {
+        ""baseColorTexture"": {
+          ""index"": 0
+        },
+        ""metallicRoughnessTexture"": {
+          ""index"": 1
+        }
+      },
+      ""normalTexture"": {
+        ""index"": 2
+      },
+      ""occlusionTexture"": {
+        ""index"": 1
+      },
+      ""emissiveFactor"": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      ""emissiveTexture"": {
+        ""index"": 3
+      },
+      ""name"": ""BoomBox_Mat""
+    }
+  ],
+  ""nodes"": [
+    {
+      ""mesh"": 0,
+      ""name"": ""BoomBox""
+    }
+  ],
+  ""scene"": 0,
+  ""scenes"": [
+    {
+      ""nodes"": [
+        0
+      ]
+    }
+  ],
+  ""textures"": [
+    {
+      ""source"": 0
+    },
+    {
+      ""source"": 1
+    },
+    {
+      ""source"": 2
+    },
+    {
+      ""source"": 3
+    }
+  ]
+}";
+
 		public enum MaterialType
 		{
 			PbrMetallicRoughness,
@@ -26,9 +229,11 @@ namespace UnityGLTF
 			CommonLambert
 		}
 
+		public int MaximumLod = 300;
+		public Transform SceneParent { get; set; }
+
 		protected GameObject _lastLoadedScene;
 		protected readonly Dictionary<MaterialType, Shader> _shaderCache = new Dictionary<MaterialType, Shader>();
-		public int MaximumLod = 300;
 		protected readonly GLTF.Schema.Material DefaultMaterial = new GLTF.Schema.Material();
 		protected string _gltfFileName;
 		protected Stream _gltfStream;
@@ -36,7 +241,7 @@ namespace UnityGLTF
 		protected AssetCache _assetCache;
 		protected AsyncAction _asyncAction;
 		protected byte[] _gltfData;
-		protected Func<GLTF.Schema.Material, int, UnityEngine.Material> _fMaterialLoadCallback;
+		protected Func<GLTF.Schema.Material, UnityEngine.Material> _fMaterialLoadCallback;
 		protected ILoader _loader;
 
 		/// <summary>
@@ -178,22 +383,12 @@ namespace UnityGLTF
 				if (_gltfRoot.Buffers != null)
 				{
 					// todo add fuzzing to verify that buffers are before uri
-					for(int i = 0; i < _gltfRoot.Buffers.Count; ++i)
+					for (int i = 0; i < _gltfRoot.Buffers.Count; ++i)
 					{
-						GLTF.Schema buffer = _root.Buffers[i];
+						GLTF.Schema.Buffer buffer = _gltfRoot.Buffers[i];
 						if (_assetCache.BufferCache[i] == null)
 						{
-							if (buffer.Uri == null)
-							{
-								_assetCache.BufferCache[i] = LoadBufferFromGLB(i);
-							}
-							else
-							{
-								_assetCache.BufferCache[i] = new BufferCacheData()
-								{
-									Stream = _loader.LoadBuffer(buffer)
-								};
-							}
+							_assetCache.BufferCache[i] = LoadBuffer(buffer, i);
 						}
 					}
 				}
@@ -202,14 +397,9 @@ namespace UnityGLTF
 				{
 					for(int i = 0; i < _gltfRoot.Images.Count; ++i)
 					{
-						Image image = _gltfRoot.Images[i];
-						if (_loadType == LoadType.Stream || image.Uri == null)
+						if (_assetCache.ImageCache[i] == null)
 						{
-							LoadImageFromStream(_gltfDirectoryPath, image, i);
-						}
-						else if (_loadType == LoadType.Uri)
-						{
-							yield return LoadImageFromURI(_gltfDirectoryPath, image, i);
+							_assetCache.ImageCache[i] = LoadImage(_gltfRoot.Images[i], i);
 						}
 					}
 				}
@@ -224,19 +414,46 @@ namespace UnityGLTF
 
 			var sceneObj = CreateScene(scene);
 
-			if (_sceneParent != null)
+			if (SceneParent != null)
 			{
-				sceneObj.transform.SetParent(_sceneParent, false);
+				sceneObj.transform.SetParent(SceneParent, false);
 			}
 
 			_lastLoadedScene = sceneObj;
+		}
+
+		protected BufferCacheData LoadBuffer(GLTF.Schema.Buffer buffer, int index)
+		{
+			if (buffer.Uri == null)
+			{
+				return LoadBufferFromGLB(index);
+			}
+			else
+			{
+				return new BufferCacheData()
+				{
+					Stream = _loader.LoadBuffer(buffer)
+				};
+			}
+		}
+
+		protected Texture2D LoadImage(GLTF.Schema.Image image, int index)
+		{
+			if (image.Uri == null)
+			{
+				return LoadImageFromGLB(image, index);
+			}
+			else
+			{
+				return _loader.LoadImage(image);
+			}
 		}
 
 		protected virtual void BuildAttributesForMeshes()
 		{
 			for (int i = 0; i < _gltfRoot.Meshes.Count; ++i)
 			{
-				GLTF.Schema.Mesh mesh = _root.Meshes[i];
+				GLTF.Schema.Mesh mesh = _gltfRoot.Meshes[i];
 				if (_assetCache.MeshCache[i] == null)
 				{
 					_assetCache.MeshCache[i] = new MeshCacheData[mesh.Primitives.Count];
@@ -253,7 +470,7 @@ namespace UnityGLTF
 
 		protected virtual void BuildMeshAttributes(MeshPrimitive primitive, int meshID, int primitiveIndex)
 		{
-			if (_assetCache.MeshCache[meshID].MeshAttributes.Count == 0)
+			if (_assetCache.MeshCache[meshID][primitiveIndex].MeshAttributes.Count == 0)
 			{
 				Dictionary<string, AttributeAccessor> attributeAccessors = new Dictionary<string, AttributeAccessor>(primitive.Attributes.Count + 1);
 				foreach (var attributePair in primitive.Attributes)
@@ -261,29 +478,12 @@ namespace UnityGLTF
 					BufferId bufferIdPair = attributePair.Value.Value.BufferView.Value.Buffer;
 					GLTF.Schema.Buffer buffer = bufferIdPair.Value;
 					int bufferId = bufferIdPair.Id;
-
-					// todo: rehook up buffer cache
+					
 					// on cache miss, load the buffer
-					//if(_assetCache.BufferCache[bufferId] == null)
-					//{
-					//	if(buffer.Uri == null)
-					//	{
-					//		GLTFParser.SeekToBinaryChunk(_gltfStream, bufferId);
-					//		_assetCache.BufferCache[bufferId] = new BufferCacheData()
-					//		{
-					//			Stream = _gltfStream,
-					//			ChunkOffset = _gltfStream.Position
-					//		};
-					//	}
-					//	else
-					//	{
-					//		yield return _loader.LoadBuffer(buffer);
-					//		_assetCache.BufferCache[bufferId] = new BufferCacheData()
-					//		{
-					//			Stream = _loader.LoadedBuffer
-					//		};
-					//	}
-					//}
+					if (_assetCache.BufferCache[bufferId] == null)
+					{
+						_assetCache.BufferCache[bufferId] = LoadBuffer(buffer, bufferId);
+					}
 
 					AttributeAccessor AttributeAccessor = new AttributeAccessor()
 					{
@@ -446,7 +646,7 @@ namespace UnityGLTF
 
 			UnityEngine.Material materialToSet = null;
 			bool shouldUseDefaultMaterial = primitive.Material == null;
-			GLTF.Material materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
+			GLTF.Schema.Material materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
 			int materialIndex = primitive.Material != null ? primitive.Material.Id : -1;
 			var material = _fMaterialLoadCallback(materialToLoad);
 			MaterialCacheData materialWrapper = new MaterialCacheData
@@ -467,7 +667,7 @@ namespace UnityGLTF
 			return primitiveObj;
 		}
 
-		protected virtual MaterialCacheData CreateMaterial(GLTF.Schema.Material def, int materialIndex)
+		protected virtual UnityEngine.Material CreateMaterial(GLTF.Schema.Material def)
 		{
 			Shader shader;
 
@@ -619,7 +819,7 @@ namespace UnityGLTF
 			{
 				if(_assetCache.ImageCache[texture.Source.Id] == null)
 				{
-					_assetCache.ImageCache[texture.Source.Id] = _loader.LoadImage(_gltfRoot.Images[texture.Source.Id]);
+					_assetCache.ImageCache[texture.Source.Id] = LoadImage(_gltfRoot.Images[texture.Source.Id], texture.Source.Id);
 				}
 
 				var source = _assetCache.ImageCache[texture.Source.Id];
@@ -667,121 +867,20 @@ namespace UnityGLTF
 
 			return _assetCache.TextureCache[texture.Source.Id];
 		}
-
-
-		protected virtual IEnumerator LoadImageFromURI(string rootPath, Image image, int imageID)
+		
+		protected virtual Texture2D LoadImageFromGLB(Image image, int imageID)
 		{
-			if (_assetCache.ImageCache[imageID] == null)
-			{
-				if (image.Uri != null)
-				{
-					Texture2D texture = null;
-					var uri = image.Uri;
+			var texture = new Texture2D(0, 0);
+			var bufferView = image.BufferView.Value;
+			var buffer = bufferView.Buffer.Value;
+			var data = new byte[bufferView.ByteLength];
 
-					Regex regex = new Regex(Base64StringInitializer);
-					Match match = regex.Match(uri);
-					if (match.Success)
-					{
-						var base64Data = uri.Substring(match.Length);
-						var textureData = Convert.FromBase64String(base64Data);
-						texture = new Texture2D(0, 0);
-						texture.LoadImage(textureData);
-					}
-					else
-					{
-						var www = UnityWebRequest.Get(Path.Combine(rootPath, uri));
-						www.downloadHandler = new DownloadHandlerTexture();
+			var bufferContents = _assetCache.BufferCache[bufferView.Buffer.Id];
+			bufferContents.Stream.Position = bufferView.ByteOffset + bufferContents.ChunkOffset;
+			bufferContents.Stream.Read(data, 0, data.Length);
+			texture.LoadImage(data);
 
-						yield return www.Send();
-
-						// HACK to enable mipmaps :(
-						var tempTexture = DownloadHandlerTexture.GetContent(www);
-						if (tempTexture != null)
-						{
-							texture = new Texture2D(tempTexture.width, tempTexture.height, tempTexture.format, true);
-							texture.SetPixels(tempTexture.GetPixels());
-							texture.Apply(true);
-						}
-						else
-						{
-							Debug.LogFormat("{0} {1}", www.responseCode, www.url);
-							texture = new Texture2D(16, 16);
-						}
-					}
-
-					_assetCache.ImageCache[imageID] = texture;
-				}
-			}
-		}
-
-		protected virtual void LoadImageFromStream(string rootPath, Image image, int imageID)
-		{
-			if (_assetCache.ImageCache[imageID] == null)
-			{
-				Texture2D texture = null;
-				if (image.Uri != null)
-				{
-					var pathToLoad = Path.Combine(rootPath, image.Uri);
-					var file = File.OpenRead(pathToLoad);
-					byte[] bufferData = new byte[file.Length];
-						file.Read(bufferData, 0, (int)file.Length);
-#if !WINDOWS_UWP
-					file.Close();
-#else
-					file.Dispose();
-#endif
-					texture = new Texture2D(0, 0);
-					texture.LoadImage(bufferData);
-				}
-				else
-				{
-					texture = new Texture2D(0, 0);
-					var bufferView = image.BufferView.Value;
-					var buffer = bufferView.Buffer.Value;
-					var data = new byte[bufferView.ByteLength];
-
-					var bufferContents = _assetCache.BufferCache[bufferView.Buffer.Id];
-					bufferContents.Stream.Position = bufferView.ByteOffset + bufferContents.ChunkOffset;
-					bufferContents.Stream.Read(data, 0, data.Length);
-					texture.LoadImage(data);
-				}
-
-				_assetCache.ImageCache[imageID] = texture;
-			}
-		}
-
-		/// <summary>
-		/// Load the remote URI data into a byte array.
-		/// </summary>
-		protected virtual IEnumerator LoadBuffer(string sourceUri, GLTF.Schema.Buffer buffer, int bufferIndex)
-		{
-			if (_assetCache.BufferCache[bufferIndex] == null || _assetCache.BufferCache[bufferIndex].Stream == null)
-			{
-				_assetCache.BufferCache[bufferIndex] = new BufferCacheData();
-				if (buffer.Uri != null)
-				{
-					byte[] bufferData = null;
-					var uri = buffer.Uri;
-
-					Regex regex = new Regex(Base64StringInitializer);
-					Match match = regex.Match(uri);
-					if (match.Success)
-					{
-						var base64Data = uri.Substring(match.Length);
-						bufferData = Convert.FromBase64String(base64Data);
-						_assetCache.BufferCache[bufferIndex].Stream = new MemoryStream(bufferData, 0, bufferData.Length, false, true);
-					}
-					else if (_loadType == LoadType.Uri)
-					{
-						var www = UnityWebRequest.Get(Path.Combine(sourceUri, uri));
-
-						yield return www.Send();
-
-						bufferData = www.downloadHandler.data;
-						_assetCache.BufferCache[bufferIndex].Stream = new MemoryStream(bufferData, 0, bufferData.Length, false, true);
-					}
-				}
-			}
+			return texture;
 		}
 
 		protected virtual BufferCacheData LoadBufferFromGLB(int bufferIndex)

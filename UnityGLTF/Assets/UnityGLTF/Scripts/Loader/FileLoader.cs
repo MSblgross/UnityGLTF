@@ -31,7 +31,7 @@ namespace UnityGLTF.Loader
 				throw new ArgumentNullException("buffer");
 			}
 
-			if (buffer.Uri != null)
+			if (buffer.Uri == null)
 			{
 				throw new ArgumentException("Cannot load buffer with null URI. Should be loaded via GLB method instead", "buffer");
 			}
@@ -65,11 +65,11 @@ namespace UnityGLTF.Loader
 #if !WINDOWS_UWP
 			fileStream.Close();
 #else
-			file.Dispose();
+			fileStream.Dispose();
 #endif
 			texture = new Texture2D(0, 0);
 			texture.LoadImage(bufferData);
-
+			texture.Apply();
 			return texture;
 		}
 

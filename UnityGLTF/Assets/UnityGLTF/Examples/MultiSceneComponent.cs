@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using UnityEngine;
+using UnityGLTF.Loader;
 
 namespace UnityGLTF.Examples
 {
@@ -8,17 +10,22 @@ namespace UnityGLTF.Examples
 		public int SceneIndex = 0;
 		public string Url;
 		public Shader GLTFStandardShader;
-		private GLTFSceneImporter loader;
+		private GLTFSceneImporter importer;
 
 		void Start()
 		{
 			Debug.Log("Hit spacebar to change the scene.");
-			// todo: rehook up
-			//loader = new GLTFSceneImporter(
-			//	Url,
-			//	gameObject.transform
-			//);
-			loader.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.PbrMetallicRoughness, GLTFStandardShader);
+
+			Uri uri = new Uri(Url);
+			var directoryPath = URIHelper.AbsoluteUriPath(uri);
+			var loader = new WebRequestLoader(directoryPath);
+			importer = new GLTFSceneImporter(
+				URIHelper.GetFileFromUri(uri),
+				loader
+				);
+
+			importer.SceneParent = gameObject.transform;
+			importer.SetShaderForMaterialType(GLTFSceneImporter.MaterialType.PbrMetallicRoughness, GLTFStandardShader);
 			StartCoroutine(LoadScene(SceneIndex));
 		}
 
@@ -38,10 +45,8 @@ namespace UnityGLTF.Examples
 			{
 				GameObject.Destroy(child.gameObject);
 			}
-
-			// todo: rehook up
-			//yield return loader.Load(SceneIndex);
-			yield return null;
+			
+			yield return importer.LoadScene(SceneIndex);
 		}
 	}
 }
