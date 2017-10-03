@@ -78,7 +78,7 @@ namespace UnityGLTF.Loader
 			}
 			else
 			{
-				Stream responseStream = CreateHTTPRequest(_rootURI, uri);
+				MemoryStream responseStream = CreateHTTPRequest(_rootURI, uri);
 				
 				if (responseStream != null)
 				{
@@ -87,22 +87,18 @@ namespace UnityGLTF.Loader
 					{
 						throw new Exception("Stream is larger than can be copied into byte array");
 					}
-
-					byte[] streamAsBytes = new byte[responseStream.Length];
-					responseStream.Read(streamAsBytes, 0, (int)responseStream.Length);
-#if !WINDOWS_UWP
-					responseStream.Close();
-#else
-					responseStream.Dispose();
-#endif
-					texture.LoadImage(streamAsBytes);
+		
+					texture.LoadImage(responseStream.ToArray());
+					texture.Apply();
 				}
+
+				responseStream.Close();
 			}
 
 			return texture;
 		}
 
-		private Stream CreateHTTPRequest(string rootUri, string httpRequestPath)
+		private MemoryStream CreateHTTPRequest(string rootUri, string httpRequestPath)
 		{
 			HttpWebRequest www = (HttpWebRequest)WebRequest.Create(Path.Combine(_rootURI, httpRequestPath));
 			www.Timeout = 5000;
@@ -128,7 +124,7 @@ namespace UnityGLTF.Loader
 			{
 				memoryStream.Write(chunk, 0, bytesRead);
 			}
-			File.WriteAllBytes(Application.streamingAssetsPath + Path.DirectorySeparatorChar + "temp" + Path.DirectorySeparatorChar + httpRequestPath, chunk);
+
 			webResponse.Close();
 			return memoryStream;
 		}
