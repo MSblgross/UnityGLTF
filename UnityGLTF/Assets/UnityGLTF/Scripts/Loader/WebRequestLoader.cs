@@ -47,7 +47,8 @@ namespace UnityGLTF.Loader
 			if (match.Success)
 			{
 				var base64Data = uri.Substring(match.Length);
-				bufferDataStream = new MemoryStream(Convert.FromBase64String(base64Data));
+				byte[] bufferData = Convert.FromBase64String(base64Data);
+				bufferDataStream = new MemoryStream(bufferData, 0, bufferData.Length, false, true);
 			}
 			else
 			{
