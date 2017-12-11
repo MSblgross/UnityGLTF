@@ -19,7 +19,7 @@ namespace GLTF.Schema
 					Name = reader.ReadAsString();
 					break;
 				default:
-					base.DefaultPropertyDeserializer(root, reader);
+                    base.DefaultPropertyDeserializer(root, reader);
 					break;
 			}
 		}

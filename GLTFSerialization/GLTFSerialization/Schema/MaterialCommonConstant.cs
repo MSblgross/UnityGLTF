@@ -30,7 +30,7 @@ namespace GLTF.Schema
 			{
 				throw new Exception("Asset must be an object.");
 			}
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -47,10 +47,10 @@ namespace GLTF.Schema
 						commonConstant.LightmapFactor = reader.ReadAsRGBColor();
 						break;
 					default:
-						commonConstant.DefaultPropertyDeserializer(root, reader);
+                        commonConstant.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return commonConstant;
 		}

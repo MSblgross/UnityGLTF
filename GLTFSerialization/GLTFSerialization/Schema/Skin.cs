@@ -31,7 +31,7 @@ namespace GLTF.Schema
 		public static Skin Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var skin = new Skin();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -48,10 +48,10 @@ namespace GLTF.Schema
 						skin.Joints = reader.ReadList(() => NodeId.Deserialize(root, reader));
 						break;
 					default:
-						skin.DefaultPropertyDeserializer(root, reader);
+                        skin.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return skin;
 		}

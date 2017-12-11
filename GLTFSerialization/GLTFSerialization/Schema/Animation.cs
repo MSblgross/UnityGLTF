@@ -25,7 +25,7 @@ namespace GLTF.Schema
 		public static Animation Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var animation = new Animation();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -39,12 +39,12 @@ namespace GLTF.Schema
 						animation.Samplers = reader.ReadList(() => AnimationSampler.Deserialize(root, reader));
 						break;
 					default:
-						animation.DefaultPropertyDeserializer(root, reader);
+                        animation.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
-			return animation;
+            return animation;
 		}
 
 		public override void Serialize(JsonWriter writer)

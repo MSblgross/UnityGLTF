@@ -16,7 +16,7 @@ namespace GLTF.Schema
 		public static Scene Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var scene = new Scene();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -27,10 +27,10 @@ namespace GLTF.Schema
 						scene.Nodes = NodeId.ReadList(root, reader);
 						break;
 					default:
-						scene.DefaultPropertyDeserializer(root, reader);
+                        scene.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return scene;
 		}

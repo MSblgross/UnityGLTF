@@ -265,15 +265,13 @@ namespace GLTFSerializationTests
 		{
 			Assert.IsNotNull(gltfRoot.Extras);
 
-			JProperty extras = gltfRoot.Extras as JProperty;
-			Assert.AreEqual(JTokenType.Object, extras.Value.Type);
-
-			JObject jObject = extras.Value as JObject;
-			JToken testIntProperty = (extras.Value as JObject)["testint"];
+			JObject extras = gltfRoot.Extras as JObject;
+			
+			JToken testIntProperty = extras["testint"];
 			Assert.AreEqual(JTokenType.Integer, testIntProperty.Type);
 			Assert.AreEqual(254, testIntProperty.Value<int>());
 
-			JToken testStringProperty = jObject["teststring"];
+			JToken testStringProperty = extras["teststring"];
 			Assert.AreEqual(JTokenType.String, testStringProperty.Type);
 			Assert.AreEqual("hello", testStringProperty.Value<string>());
 		}

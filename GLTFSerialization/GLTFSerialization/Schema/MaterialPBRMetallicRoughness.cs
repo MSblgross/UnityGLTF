@@ -63,7 +63,7 @@ namespace GLTF.Schema
 			{
 				throw new Exception("Asset must be an object.");
 			}
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -86,10 +86,10 @@ namespace GLTF.Schema
 						metallicRoughness.MetallicRoughnessTexture = TextureInfo.Deserialize(root, reader);
 						break;
 					default:
-						metallicRoughness.DefaultPropertyDeserializer(root, reader);
+                        metallicRoughness.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return metallicRoughness;
 		}

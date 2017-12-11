@@ -30,7 +30,7 @@ namespace GLTF.Schema
 		public static Camera Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var camera = new Camera();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -44,12 +44,12 @@ namespace GLTF.Schema
 						camera.Perspective = CameraPerspective.Deserialize(root, reader);
 						break;
 					default:
-						camera.DefaultPropertyDeserializer(root, reader);
+                        camera.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
-			return camera;
+            return camera;
 		}
 
 		public override void Serialize(JsonWriter writer)

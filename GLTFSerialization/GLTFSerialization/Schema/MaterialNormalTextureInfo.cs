@@ -22,7 +22,7 @@ namespace GLTF.Schema
 			{
 				throw new Exception("Asset must be an object.");
 			}
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -39,10 +39,10 @@ namespace GLTF.Schema
 						textureInfo.Scale = reader.ReadAsDouble().Value;
 						break;
 					default:
-						textureInfo.DefaultPropertyDeserializer(root, reader);
+                        textureInfo.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return textureInfo;
 		}

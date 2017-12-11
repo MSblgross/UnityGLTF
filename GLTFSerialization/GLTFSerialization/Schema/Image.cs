@@ -30,7 +30,7 @@ namespace GLTF.Schema
 		public static Image Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var image = new Image();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -47,10 +47,11 @@ namespace GLTF.Schema
 						image.BufferView = BufferViewId.Deserialize(root, reader);
 						break;
 					default:
-						image.DefaultPropertyDeserializer(root, reader);
+                        image.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+
+            }
 
 			return image;
 		}

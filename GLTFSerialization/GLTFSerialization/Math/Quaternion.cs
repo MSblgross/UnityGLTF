@@ -1,8 +1,15 @@
-﻿namespace GLTF.Math
+﻿using System;
+
+namespace GLTF.Math
 {
-	public struct Quaternion
+	public struct Quaternion : IEquatable<Quaternion>
 	{
 		public static readonly Quaternion Identity = new Quaternion(0f, 0f, 0f, 1f);
+
+		public float X { get; set; }
+		public float Y { get; set; }
+		public float Z { get; set; }
+		public float W { get; set; }
 
 		public Quaternion(float x, float y, float z, float w)
 		{
@@ -20,34 +27,37 @@
 			W = other.W;
 		}
 
-		public override bool Equals(object obj)
-		{
-			if(!(obj is Quaternion))
-			{
-				base.Equals(obj);
-			}
+		public bool Equals(Quaternion other)
+	    {
+	        return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z) && W.Equals(other.W);
+	    }
 
-			return this == (Quaternion)obj;
-		}
+	    public override bool Equals(object obj)
+	    {
+	        if (ReferenceEquals(null, obj)) return false;
+	        return obj is Quaternion && Equals((Quaternion) obj);
+	    }
 
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
+	    public override int GetHashCode()
+	    {
+	        unchecked
+	        {
+	            var hashCode = X.GetHashCode();
+	            hashCode = (hashCode * 397) ^ Y.GetHashCode();
+	            hashCode = (hashCode * 397) ^ Z.GetHashCode();
+	            hashCode = (hashCode * 397) ^ W.GetHashCode();
+	            return hashCode;
+	        }
+	    }
 
-		public float X { get; set; }
-		public float Y { get; set; }
-		public float Z { get; set; }
-		public float W { get; set; }
+	    public static bool operator ==(Quaternion left, Quaternion right)
+	    {
+	        return left.Equals(right);
+	    }
 
-		public static bool operator ==(Quaternion left, Quaternion right)
-		{
-			return left.X == right.X && left.Y == right.Y && left.Z == right.Z && left.W == right.W;
-		}
-
-		public static bool operator !=(Quaternion left, Quaternion right)
-		{
-			return !(left == right);
-		}
-	}
+	    public static bool operator !=(Quaternion left, Quaternion right)
+	    {
+	        return !left.Equals(right);
+	    }
+    }
 }

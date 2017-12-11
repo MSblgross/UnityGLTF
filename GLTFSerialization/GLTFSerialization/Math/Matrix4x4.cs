@@ -3,7 +3,7 @@
 namespace GLTF.Math
 {
 	// class is naively implemented
-	public class Matrix4x4
+	public class Matrix4x4 : IEquatable<Matrix4x4>
 	{
 		public static readonly Matrix4x4 Identity = new Matrix4x4(
 			1f, 0f, 0f, 0f,
@@ -11,6 +11,26 @@ namespace GLTF.Math
 			0f, 0f, 1f, 0f,
 			0f, 0f, 0f, 1f
 			);
+
+
+		private float[] mat = new float[16];
+
+		public float M11 { get { return mat[0]; } set { mat[0] = value; } }
+		public float M21 { get { return mat[1]; } set { mat[1] = value; } }
+		public float M31 { get { return mat[2]; } set { mat[2] = value; } }
+		public float M41 { get { return mat[3]; } set { mat[3] = value; } }
+		public float M12 { get { return mat[4]; } set { mat[4] = value; } }
+		public float M22 { get { return mat[5]; } set { mat[5] = value; } }
+		public float M32 { get { return mat[6]; } set { mat[6] = value; } }
+		public float M42 { get { return mat[7]; } set { mat[7] = value; } }
+		public float M13 { get { return mat[8]; } set { mat[8] = value; } }
+		public float M23 { get { return mat[9]; } set { mat[9] = value; } }
+		public float M33 { get { return mat[10]; } set { mat[10] = value; } }
+		public float M43 { get { return mat[11]; } set { mat[11] = value; } }
+		public float M14 { get { return mat[12]; } set { mat[12] = value; } }
+		public float M24 { get { return mat[13]; } set { mat[13] = value; } }
+		public float M34 { get { return mat[14]; } set { mat[14] = value; } }
+		public float M44 { get { return mat[15]; } set { mat[15] = value; } }
 
 		/// <summary>
 		/// Matrix is column major ordered
@@ -34,57 +54,49 @@ namespace GLTF.Math
 			M43 = m43;
 			M44 = m44;
 		}
-
+		
 		public Matrix4x4(Matrix4x4 other)
 		{
-			Array.Copy(other.mat, 0, mat, 0, 16);
+			M11 = other.M11;
+			M12 = other.M12;
+			M13 = other.M13;
+			M14 = other.M14;
+			M21 = other.M21;
+			M22 = other.M22;
+			M23 = other.M23;
+			M24 = other.M24;
+			M31 = other.M31;
+			M32 = other.M32;
+			M33 = other.M33;
+			M34 = other.M34;
+			M41 = other.M41;
+			M42 = other.M42;
+			M43 = other.M43;
+			M44 = other.M44;
 		}
 
-		public override bool Equals(object obj)
-		{
-			if (!(obj is Matrix4x4))
-			{
-				base.Equals(obj);
-			}
+	    public bool Equals(Matrix4x4 other)
+	    {
+	        if (ReferenceEquals(null, other)) return false;
+	        if (ReferenceEquals(this, other)) return true;
 
-			return (obj as Matrix4x4) == this;
-		}
+	        return M11 == other.M11 && M12 == other.M12 && M13 == other.M13 && M14 == other.M14 &&
+	               M21 == other.M21 && M22 == other.M22 && M23 == other.M23 && M24 == other.M24 &&
+	               M31 == other.M31 && M32 == other.M32 && M33 == other.M33 && M34 == other.M34 &&
+	               M41 == other.M41 && M42 == other.M42 && M43 == other.M43 && M44 == other.M44;
+        }
 
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
+	    public override bool Equals(object obj)
+	    {
+	        if (ReferenceEquals(null, obj)) return false;
+	        if (ReferenceEquals(this, obj)) return true;
+	        if (obj.GetType() != this.GetType()) return false;
+	        return Equals((Matrix4x4) obj);
+	    }
 
-		private float[] mat = new float[16];
-
-		public float M11 { get { return mat[0]; } set { mat[0] = value; } }
-		public float M21 { get { return mat[1]; } set { mat[1] = value; } }
-		public float M31 { get { return mat[2]; } set { mat[2] = value; } }
-		public float M41 { get { return mat[3]; } set { mat[3] = value; } }
-		public float M12 { get { return mat[4]; } set { mat[4] = value; } }
-		public float M22 { get { return mat[5]; } set { mat[5] = value; } }
-		public float M32 { get { return mat[6]; } set { mat[6] = value; } }
-		public float M42 { get { return mat[7]; } set { mat[7] = value; } }
-		public float M13 { get { return mat[8]; } set { mat[8] = value; } }
-		public float M23 { get { return mat[9]; } set { mat[9] = value; } }
-		public float M33 { get { return mat[10]; } set { mat[10] = value; } }
-		public float M43 { get { return mat[11]; } set { mat[11] = value; } }
-		public float M14 { get { return mat[12]; } set { mat[12] = value; } }
-		public float M24 { get { return mat[13]; } set { mat[13] = value; } }
-		public float M34 { get { return mat[14]; } set { mat[14] = value; } }
-		public float M44 { get { return mat[15]; } set { mat[15] = value; } }
-
-		public static bool operator ==(Matrix4x4 left, Matrix4x4 right)
-		{
-			return left.M11 == right.M11 && left.M12 == right.M12 && left.M13 == right.M13 && left.M14 == right.M14 &&
-				   left.M21 == right.M21 && left.M22 == right.M22 && left.M23 == right.M23 && left.M24 == right.M24 &&
-				   left.M31 == right.M31 && left.M32 == right.M32 && left.M33 == right.M33 && left.M34 == right.M34 &&
-				   left.M41 == right.M41 && left.M42 == right.M42 && left.M43 == right.M43 && left.M44 == right.M44;
-		}
-
-		public static bool operator !=(Matrix4x4 left, Matrix4x4 right)
-		{
-			return !(left.mat == right.mat);
-		}
+	    public override int GetHashCode()
+	    {
+	        return (mat != null ? mat.GetHashCode() : 0);
+	    }
 	}
 }

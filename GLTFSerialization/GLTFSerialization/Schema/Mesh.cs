@@ -26,7 +26,7 @@ namespace GLTF.Schema
 		public static Mesh Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var mesh = new Mesh();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -40,10 +40,10 @@ namespace GLTF.Schema
 						mesh.Weights = reader.ReadDoubleList();
 						break;
 					default:
-						mesh.DefaultPropertyDeserializer(root, reader);
+                        mesh.DefaultPropertyDeserializer(root, reader);
 						break;
-				}
-			}
+                }
+            }
 
 			return mesh;
 		}

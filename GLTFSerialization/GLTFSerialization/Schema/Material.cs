@@ -82,7 +82,7 @@ namespace GLTF.Schema
 		public static Material Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var material = new Material();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -117,10 +117,10 @@ namespace GLTF.Schema
 						material.DoubleSided = reader.ReadAsBoolean().Value;
 						break;
 					default:
-						material.DefaultPropertyDeserializer(root, reader);
+                        material.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return material;
 		}

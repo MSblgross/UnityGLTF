@@ -75,7 +75,7 @@ namespace GLTF.Schema
 		public static Node Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var node = new Node();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -120,10 +120,10 @@ namespace GLTF.Schema
 						node.Weights = reader.ReadDoubleList();
 						break;
 					default:
-						node.DefaultPropertyDeserializer(root, reader);
+                        node.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return node;
 		}

@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace GLTF.Schema
 {
@@ -31,7 +32,7 @@ namespace GLTF.Schema
 			{
 				throw new Exception("Asset must be an object.");
 			}
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -45,13 +46,41 @@ namespace GLTF.Schema
 						textureInfo.TexCoord = reader.ReadAsInt32().Value;
 						break;
 					default:
-						textureInfo.DefaultPropertyDeserializer(root, reader);
+                        textureInfo.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return textureInfo;
 		}
+
+        public static TextureInfo Deserialize(GLTFRoot root, JProperty jProperty)
+        {
+            var textureInfo = new TextureInfo();
+
+            foreach (JToken child in jProperty.Children())
+            {
+                if(child is JProperty)
+                {
+                    JProperty childAsJProperty = child as JProperty;
+                    switch(childAsJProperty.Name)
+                    {
+                        case "index":
+                            textureInfo.Index = TextureId.Deserialize(root, childAsJProperty);
+                            break;
+                        case "texCoord":
+                            textureInfo.TexCoord = (int)childAsJProperty.Value;
+                            break;
+                        default:
+                            // todo: implement
+                            //textureInfo.DefaultPropertyDeserializer(root, childAsJProperty);
+                            break;
+                    }
+                }
+            }
+
+            return textureInfo;
+        }
 
 		public override void Serialize(JsonWriter writer)
 		{

@@ -57,12 +57,12 @@ namespace GLTF.Schema
 						cameraOrthographic.ZNear = reader.ReadAsDouble().Value;
 						break;
 					default:
-						cameraOrthographic.DefaultPropertyDeserializer(root, reader);
+                        cameraOrthographic.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
-			return cameraOrthographic;
+            return cameraOrthographic;
 		}
 
 		public override void Serialize(JsonWriter writer)

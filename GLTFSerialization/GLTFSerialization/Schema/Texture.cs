@@ -20,7 +20,7 @@ namespace GLTF.Schema
 		public static Texture Deserialize(GLTFRoot root, JsonReader reader)
 		{
 			var texture = new Texture();
-
+			
 			while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
 			{
 				var curProp = reader.Value.ToString();
@@ -34,10 +34,10 @@ namespace GLTF.Schema
 						texture.Source = ImageId.Deserialize(root, reader);
 						break;
 					default:
-						texture.DefaultPropertyDeserializer(root, reader);
+                        texture.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
 			return texture;
 		}

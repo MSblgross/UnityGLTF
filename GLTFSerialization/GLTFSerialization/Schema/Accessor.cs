@@ -132,12 +132,12 @@ namespace GLTF.Schema
 						accessor.Sparse = AccessorSparse.Deserialize(root, reader);
 						break;
 					default:
-						accessor.DefaultPropertyDeserializer(root, reader);
+                        accessor.DefaultPropertyDeserializer(root, reader);
 						break;
 				}
-			}
+            }
 
-			return accessor;
+            return accessor;
 		}
 
 		public override void Serialize(JsonWriter writer)
