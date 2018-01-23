@@ -91,6 +91,13 @@ namespace UnityGLTF
 			if (glbStream != null) _gltfStream = new GLBStream {Stream = glbStream, StartPosition = glbStream.Position};
 		}
 
+		public GLTFSceneImporter(GLTFRoot rootNode, ILoader externalDataLoader, string gltfFileName = null) : this(externalDataLoader)
+		{
+			_gltfRoot = rootNode;
+			_loader = externalDataLoader;
+			_gltfFileName = gltfFileName;
+		}
+
 		private GLTFSceneImporter(ILoader externalDataLoader)
 		{
 			_loader = externalDataLoader;
@@ -252,12 +259,20 @@ namespace UnityGLTF
 		protected IEnumerator LoadImageBuffer(GLTF.Schema.Texture texture, int textureIndex)
 		{
 			int sourceId = GetTextureSourceId(texture);
-			if (_assetCache.ImageStreamCache[sourceId] == null)
-			{
-				GLTF.Schema.Image image = _gltfRoot.Images[sourceId];
+			GLTF.Schema.Image image = _gltfRoot.Images[sourceId];
 
+			if (image.Uri == null)
+			{
+				var bufferIndex = image.BufferView.Value.Buffer.Id;
+				if (_assetCache.BufferCache[bufferIndex] == null)
+				{
+					yield return LoadBuffer(_gltfRoot.Buffers[bufferIndex], bufferIndex);
+				}
+			}
+			else if (_assetCache.ImageStreamCache[sourceId] == null)
+			{
 				// we only load the streams if not a base64 uri, meaning the data is in the uri
-				if (image.Uri != null && !URIHelper.IsBase64Uri(image.Uri))
+				if (!URIHelper.IsBase64Uri(image.Uri))
 				{
 					 yield return _loader.LoadStream(image.Uri);
 					_assetCache.ImageStreamCache[sourceId] = _loader.LoadedStream;
@@ -372,7 +387,18 @@ namespace UnityGLTF
 		{
 			if (buffer.Uri == null)
 			{
-				_assetCache.BufferCache[bufferIndex] = LoadBufferFromGLB(bufferIndex);
+				if (_gltfStream == null)
+				{
+					yield return _loader.LoadStream(_gltfFileName);
+					_gltfStream = _loader.LoadedStream;
+				}
+
+				GLTFParser.SeekToBinaryChunk(_gltfStream, bufferIndex);  // sets stream to correct start position
+				_assetCache.BufferCache[bufferIndex] = new BufferCacheData
+				{
+					Stream = _gltfStream,
+					ChunkOffset = _gltfStream.Position
+				};
 			}
 			else
 			{
@@ -402,9 +428,17 @@ namespace UnityGLTF
 		{
 			if (_assetCache.ImageCache[imageCacheIndex] == null)
 			{
+				Stream stream = null;
 				if (image.Uri == null)
 				{
-					yield return LoadImageFromGLB(image, imageCacheIndex);
+					var bufferView = image.BufferView.Value;
+					var data = new byte[bufferView.ByteLength];
+
+					var bufferContents = _assetCache.BufferCache[bufferView.Buffer.Id];
+					bufferContents.Stream.Position = bufferView.ByteOffset + bufferContents.ChunkOffset;
+					bufferContents.Stream.Read(data, 0, data.Length);
+
+					stream = new MemoryStream(data, 0, data.Length, false, true);
 				}
 				else
 				{
@@ -414,18 +448,14 @@ namespace UnityGLTF
 					URIHelper.TryParseBase64(uri, out bufferData);
 					if (bufferData != null)
 					{
-						Texture2D loadedTexture = new Texture2D(0, 0);
-						loadedTexture.LoadImage(bufferData, true);
-						
-						_assetCache.ImageCache[imageCacheIndex] = loadedTexture;
-						yield return null;
+						stream = new MemoryStream(bufferData, 0, bufferData.Length, false, true);
 					}
 					else
 					{
-						Stream stream = _assetCache.ImageStreamCache[imageCacheIndex];
-						yield return LoadUnityTexture(stream, markGpuOnly, image, imageCacheIndex);
+						stream = _assetCache.ImageStreamCache[imageCacheIndex];
 					}
 				}
+				yield return LoadUnityTexture(stream, markGpuOnly, image, imageCacheIndex);
 			}
 		}
 
@@ -1138,31 +1168,6 @@ namespace UnityGLTF
 
 				yield return null;
 			}
-		}
-
-		protected virtual IEnumerator LoadImageFromGLB(Image image, int imageCacheIndex)
-		{
-			var texture = new Texture2D(0, 0);
-			var bufferView = image.BufferView.Value;
-			var data = new byte[bufferView.ByteLength];
-
-			var bufferContents = _assetCache.BufferCache[bufferView.Buffer.Id];
-			bufferContents.Stream.Position = bufferView.ByteOffset + bufferContents.ChunkOffset;
-			bufferContents.Stream.Read(data, 0, data.Length);
-			texture.LoadImage(data);
-
-			_assetCache.ImageCache[imageCacheIndex] = texture;
-			yield return null;
-		}
-
-		protected virtual BufferCacheData LoadBufferFromGLB(int bufferIndex)
-		{
-			GLTFParser.SeekToBinaryChunk(_gltfStream.Stream, bufferIndex, _gltfStream.StartPosition);  // sets stream to correct start position
-			return new BufferCacheData
-			{
-				Stream = _gltfStream.Stream,
-				ChunkOffset = _gltfStream.Stream.Position
-			};
 		}
 
 		protected virtual void ApplyTextureTransform(TextureInfo def, UnityEngine.Material mat, string texName)
