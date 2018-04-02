@@ -1142,9 +1142,22 @@ namespace UnityGLTF
 					: null
 			};
 
+			yield return null;
+			
 			_assetCache.MeshCache[meshId][primitiveIndex].LoadedMesh = mesh;
 
-			yield return null;
+			if (mesh.normals == null || mesh.normals.Length == 0)
+			{
+				mesh.RecalculateNormals();
+				yield return null;
+			}
+
+			if (mesh.tangents == null || mesh.tangents.Length == 0)
+			{
+				mesh.RecalculateTangents();
+				yield return null;
+			}
+
 		}
 
 		protected virtual void ConstructMaterial(GLTF.Schema.Material def, int materialIndex)
@@ -1169,7 +1182,7 @@ namespace UnityGLTF
 			{
 				var pbr = def.PbrMetallicRoughness;
 
-				mrMapper.BaseColorFactor = pbr.BaseColorFactor.ToUnityColorRaw();
+				//mrMapper.BaseColorFactor = pbr.BaseColorFactor.ToUnityColorRaw();
 
 				if (pbr.BaseColorTexture != null)
 				{
