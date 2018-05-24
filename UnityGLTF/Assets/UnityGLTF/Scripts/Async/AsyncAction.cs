@@ -1,6 +1,10 @@
 using System;
 using System.Collections;
+#if WINDOWS_UWP
+using System.Threading.Tasks;
+#else
 using System.Threading;
+#endif
 
 namespace UnityGLTF
 {
@@ -17,7 +21,11 @@ namespace UnityGLTF
 		{
 			_workerThreadRunning = true;
 
+#if WINDOWS_UWP
+			Task.Factory.StartNew(() =>
+#else
 			ThreadPool.QueueUserWorkItem((_) =>
+#endif
 			{
 				try
 				{
@@ -46,6 +54,5 @@ namespace UnityGLTF
 				yield return null;
 			}
 		}
-#endif
 	}
 }

@@ -695,11 +695,15 @@ namespace GLTF.Schema
 		[FieldOffset(0)]
 		public uint[] AsUInts;
 		[FieldOffset(0)]
+		public float[] AsFloats;
+		[FieldOffset(0)]
 		public Vector2[] AsVec2s;
 		[FieldOffset(0)]
 		public Vector3[] AsVec3s;
 		[FieldOffset(0)]
 		public Vector4[] AsVec4s;
+		[FieldOffset(0)]
+		public Matrix4x4[] AsMatrix4x4s;
 		[FieldOffset(0)]
 		public Color[] AsColors;
 		[FieldOffset(0)]
