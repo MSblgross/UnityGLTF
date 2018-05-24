@@ -357,6 +357,43 @@ namespace GLTF.Schema
 			return arr;
 		}
 
+		public float[] AsFloatArray(ref NumericArray contents, byte[] bufferViewData, uint offset)
+		{
+			if (contents.AsUInts != null)
+			{
+				return contents.AsFloats;
+			}
+
+			if (Type != GLTFAccessorAttributeType.SCALAR)
+			{
+				return null;
+			}
+
+			var arr = new float[Count];
+			uint totalByteOffset = ByteOffset + offset;
+
+			uint componentSize;
+			float maxValue;
+			GetTypeDetails(ComponentType, out componentSize, out maxValue);
+
+			var stride = BufferView.Value.ByteStride > 0 ? BufferView.Value.ByteStride : componentSize;
+
+			for (uint idx = 0; idx < Count; idx++)
+			{
+				if (ComponentType == GLTFComponentType.Float)
+				{
+					arr[idx] = GetFloatElement(bufferViewData, totalByteOffset + idx * stride);
+				}
+				else
+				{
+					arr[idx] = GetUnsignedDiscreteElement(bufferViewData, totalByteOffset + idx * stride, ComponentType);
+				}
+			}
+
+			contents.AsFloats = arr;
+			return arr;
+		}
+
 		public Vector2[] AsVector2Array(ref NumericArray contents, byte[] bufferViewData, uint offset, bool normalizeIntValues = true)
 		{
 			if (contents.AsVec2s != null) return contents.AsVec2s;
@@ -665,6 +702,58 @@ namespace GLTF.Schema
 					throw new Exception("Unsupported type passed in: " + type);
 				}
 			}
+		}
+
+		public Matrix4x4[] AsMatrix4x4Array(ref NumericArray contents, byte[] bufferViewData, uint offset, bool normalizeIntValues = true)
+		{
+            if (contents.AsMatrix4x4s != null)
+            {
+                return contents.AsMatrix4x4s;
+            }
+
+            if (Type != GLTFAccessorAttributeType.MAT4)
+            {
+                return null;
+            }
+
+			Matrix4x4[] arr = new Matrix4x4[Count];
+			uint totalByteOffset = ByteOffset + offset;
+
+			uint componentSize;
+			float maxValue;
+			GetTypeDetails(ComponentType, out componentSize, out maxValue);
+
+            if (normalizeIntValues)
+            {
+                maxValue = 1;
+            }
+
+            uint stride = BufferView.Value.ByteStride > 0 ? BufferView.Value.ByteStride : componentSize * 16;
+
+			for (uint idx = 0; idx < Count; idx++)
+			{
+				arr[idx] = new Matrix4x4(Matrix4x4.Identity);
+
+				if (ComponentType == GLTFComponentType.Float)
+				{
+					for (uint i = 0; i < 16; i++)
+					{
+						float value = GetFloatElement(bufferViewData, totalByteOffset + idx * stride + componentSize * i);
+						arr[idx].SetValue(i, value);
+					}
+				}
+				else
+				{
+					for (uint i = 0; i < 16; i++)
+					{
+						float value = GetDiscreteElement(bufferViewData, totalByteOffset + idx * stride + componentSize * i, ComponentType) / maxValue;
+						arr[idx].SetValue(i, value);
+					}
+				}
+			}
+
+			contents.AsMatrix4x4s = arr;
+			return arr;
 		}
 	}
 

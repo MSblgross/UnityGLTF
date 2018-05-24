@@ -83,7 +83,7 @@ namespace GLTF.Math
 			return (mat != null ? mat.GetHashCode() : 0);
 		}
 
-		public void SetValue(int index, float value)
+		public void SetValue(uint index, float value)
 		{
 			if(index > mat.Length)
 			{
@@ -93,7 +93,7 @@ namespace GLTF.Math
 			mat[index] = value;
 		}
 
-		public void SetValue(int row, int column, float value)
+		public void SetValue(uint row, uint column, float value)
 		{
 			switch(row)
 			{

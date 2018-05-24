@@ -108,7 +108,7 @@ namespace GLTF
 			{
 				var attributeAccessor = attributes[SemanticProperties.Weight(0)];
 				NumericArray resultArray = attributeAccessor.AccessorContent;
-				int offset = (int)LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
+				uint offset = LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
 				attributeAccessor.AccessorId.Value.AsVector4Array(ref resultArray, bufferViewCache, offset);
 				attributeAccessor.AccessorContent = resultArray;
 			}
@@ -116,7 +116,7 @@ namespace GLTF
 			{
 				var attributeAccessor = attributes[SemanticProperties.Joint(0)];
 				NumericArray resultArray = attributeAccessor.AccessorContent;
-				int offset = (int)LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
+				uint offset = LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
 				attributeAccessor.AccessorId.Value.AsVector4Array(ref resultArray, bufferViewCache, offset);
 				attributeAccessor.AccessorContent = resultArray;
 			}
@@ -125,7 +125,7 @@ namespace GLTF
 		public static void BuildBindPoseSamplers(ref AttributeAccessor attributeAccessor)
 		{
 			NumericArray resultArray = attributeAccessor.AccessorContent;
-			int offset = (int)LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
+			uint offset = LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
 			attributeAccessor.AccessorId.Value.AsMatrix4x4Array(ref resultArray, bufferViewCache, offset);
 			attributeAccessor.AccessorContent = resultArray;
 		}
@@ -141,7 +141,7 @@ namespace GLTF
 				foreach (var attributeAccessor in samplerSet.Value)
 				{
 					NumericArray resultArray = attributeAccessor.AccessorContent;
-					int offset = (int)LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
+					uint offset = LoadBufferView(attributeAccessor, out byte[] bufferViewCache);
 
 					switch (samplerSet.Key)
 					{
