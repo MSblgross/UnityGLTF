@@ -398,12 +398,7 @@ namespace UnityGLTF
 					_gltfStream.StartPosition = 0;
 				}
 
-				GLTFParser.SeekToBinaryChunk(_gltfStream.Stream, bufferIndex, _gltfStream.StartPosition);  // sets stream to correct start position
-				_assetCache.BufferCache[bufferIndex] = new BufferCacheData
-				{
-					Stream = _gltfStream.Stream,
-					ChunkOffset = _gltfStream.Stream.Position
-				};
+				_assetCache.BufferCache[bufferIndex] = ConstructBufferFromGLB(bufferIndex);
 			}
 			else
 			{
@@ -433,14 +428,13 @@ namespace UnityGLTF
 		{
 			if (_assetCache.ImageCache[imageCacheIndex] == null)
 			{
-				Stream stream = null;
 				if (image.BufferView != null)
 				{
 					yield return ConstructImageFromGLB(image, imageCacheIndex);
 				}
-
 				else
 				{
+					Stream stream;
 					string uri = image.Uri;
 
 					byte[] bufferData;
@@ -453,9 +447,9 @@ namespace UnityGLTF
 					{
 						stream = _assetCache.ImageStreamCache[imageCacheIndex];
 					}
+
+					yield return ConstructUnityTexture(stream, markGpuOnly, linear, image, imageCacheIndex);
 				}
-				
-				yield return ConstructUnityTexture(stream, markGpuOnly, linear, image, imageCacheIndex);
 			}
 		}
 
