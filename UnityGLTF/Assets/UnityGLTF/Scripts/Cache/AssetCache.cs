@@ -38,7 +38,7 @@ namespace UnityGLTF.Cache
 		/// <summary>
 		/// Cache of loaded meshes
 		/// </summary>
-		public List<MeshCacheData[]> MeshCache { get; private set; }
+		public MeshCacheData[] MeshCache { get; private set; }
 
 		/// <summary>
 		/// Cache of loaded animations
@@ -67,12 +67,7 @@ namespace UnityGLTF.Cache
 			TextureCache = new TextureCacheData[textureCacheSize];
 			MaterialCache = new MaterialCacheData[materialCacheSize];
 			BufferCache = new BufferCacheData[bufferCacheSize];
-			MeshCache = new List<MeshCacheData[]>(meshCacheSize);
-			for (int i = 0; i < meshCacheSize; ++i)
-			{
-				MeshCache.Add(null);
-			}
-
+			MeshCache = new MeshCacheData[meshCacheSize];
 			NodeCache = new GameObject[nodeCacheSize];
 			AnimationCache = new AnimationCacheData[animationCacheSize];
 		}

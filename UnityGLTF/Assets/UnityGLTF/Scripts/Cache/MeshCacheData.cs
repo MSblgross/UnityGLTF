@@ -7,12 +7,12 @@ namespace UnityGLTF.Cache
 	public class MeshCacheData
 	{
 		public Mesh LoadedMesh { get; set; }
-		public Dictionary<string, AttributeAccessor> MeshAttributes { get; set; }
+		public List<Dictionary<string, AttributeAccessor>> PrimitivesMeshAttributes { get; set; }
         public GameObject PrimitiveGO { get; set; }
 
 		public MeshCacheData()
 		{
-			MeshAttributes = new Dictionary<string, AttributeAccessor>();
+			PrimitivesMeshAttributes = new List<Dictionary<string, AttributeAccessor>>();
 		}
 
 		/// <summary>

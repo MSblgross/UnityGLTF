@@ -37,12 +37,27 @@ namespace UnityGLTF
 		public Vector3[] Normals;
 		public Vector2[] Uv1;
 		public Vector2[] Uv2;
-		public Vector2[] Uv3;
-		public Vector2[] Uv4;
 		public Color[] Colors;
-		public int[] Triangles;
+		public int[][] Triangles;
 		public Vector4[] Tangents;
 		public BoneWeight[] BoneWeights;
+
+		public void Initialize(List<Dictionary<string, AttributeAccessor>> primitivesData)
+		{
+			int verticesSize = 0;
+			for (int i = 0; i < primitivesData.Count; ++i)
+			{
+				var primitiveData = primitivesData[i];
+				if (primitiveData.ContainsKey(SemanticProperties.POSITION))
+				{
+					verticesSize += primitiveData[SemanticProperties.POSITION].AccessorContent.AsVertices.Length;
+				}
+			}
+
+			Vertices = new Vector3[verticesSize];
+
+			Normals = new Vector3[verticesSize]; Uv1 = new Vector2[verticesSize]; Uv2 = new Vector2[verticesSize];
+		}
 	}
 
 	public class GLTFSceneImporter : IDisposable
@@ -306,20 +321,13 @@ namespace UnityGLTF
 
 			if (_assetCache.MeshCache[meshIdIndex] == null)
 			{
-				_assetCache.MeshCache[meshIdIndex] = new MeshCacheData[mesh.Primitives.Count];
-			}
+				_assetCache.MeshCache[meshIdIndex].PrimitivesMeshAttributes = new List<Dictionary<string, AttributeAccessor>>(mesh.Primitives.Count);
 
-			for (int i = 0; i < mesh.Primitives.Count; ++i)
-			{
-				MeshPrimitive primitive = mesh.Primitives[i];
-
-				if (_assetCache.MeshCache[meshIdIndex][i] == null)
+				for (int i = 0; i < mesh.Primitives.Count; ++i)
 				{
-					_assetCache.MeshCache[meshIdIndex][i] = new MeshCacheData();
-				}
-
-				if (_assetCache.MeshCache[meshIdIndex][i].MeshAttributes.Count == 0)
-				{
+					MeshPrimitive primitive = mesh.Primitives[i];
+					
+					_assetCache.MeshCache[meshIdIndex].PrimitivesMeshAttributes[i] = new Dictionary<string, AttributeAccessor>(primitive.Attributes.Count);
 					ConstructMeshAttributes(primitive, meshIdIndex, i);
 					if (primitive.Material != null)
 					{
@@ -596,7 +604,7 @@ namespace UnityGLTF
 
 		protected virtual void ConstructMeshAttributes(MeshPrimitive primitive, int meshID, int primitiveIndex)
 		{
-			if (_assetCache.MeshCache[meshID][primitiveIndex].MeshAttributes.Count == 0)
+			if (_assetCache.MeshCache[meshID].PrimitivesMeshAttributes[primitiveIndex].Count == 0)
 			{
 				Dictionary<string, AttributeAccessor> attributeAccessors = new Dictionary<string, AttributeAccessor>(primitive.Attributes.Count + 1);
 				foreach (var attributePair in primitive.Attributes)
@@ -637,7 +645,7 @@ namespace UnityGLTF
 				GLTFHelpers.BuildMeshAttributes(ref attributeAccessors);
 				
 				TransformAttributes(ref attributeAccessors);
-				_assetCache.MeshCache[meshID][primitiveIndex].MeshAttributes = attributeAccessors;
+				_assetCache.MeshCache[meshID].PrimitivesMeshAttributes[primitiveIndex] = attributeAccessors;
 			}
 		}
 
@@ -999,7 +1007,7 @@ namespace UnityGLTF
 			}
 		}
 
-		private bool NeedsSkinnedMeshRenderer(MeshPrimitive primitive, Skin skin)
+		private bool NeedsSkinnedMeshRenderer(GLTFMesh primitive, Skin skin)
 		{
 			return HasBones(skin) || HasBlendShapes(primitive);
 		}
@@ -1014,7 +1022,7 @@ namespace UnityGLTF
 			return primitive.Targets != null;
 		}
 
-		protected virtual async Task SetupBones(Skin skin, MeshPrimitive primitive, SkinnedMeshRenderer renderer, GameObject primitiveObj, Mesh curMesh)
+		protected virtual async Task SetupBones(Skin skin, SkinnedMeshRenderer renderer, GameObject primitiveObj, Mesh curMesh)
 		{
 			var boneCount = skin.Joints.Count;
 			Transform[] bones = new Transform[boneCount];
@@ -1089,112 +1097,113 @@ namespace UnityGLTF
 		{
 			if (_assetCache.MeshCache[meshId] == null)
 			{
-				_assetCache.MeshCache[meshId] = new MeshCacheData[mesh.Primitives.Count];
+				_assetCache.MeshCache[meshId] = new MeshCacheData();
 			}
 
-			for (int i = 0; i < mesh.Primitives.Count; ++i)
+			GameObject meshObj = new GameObject(string.IsNullOrEmpty(mesh.Name) ? "Mesh" : mesh.Name);
+			await CreateMeshFromPrimitives(mesh);
+			Mesh curMesh = _assetCache.MeshCache[meshId].LoadedMesh;
+			Renderer renderer;
+			
+			if (NeedsSkinnedMeshRenderer(primitive, skin))
 			{
-				var primitive = mesh.Primitives[i];
+				SkinnedMeshRenderer skinnedMeshRenderer = meshObj.AddComponent<SkinnedMeshRenderer>();
+				renderer = skinnedMeshRenderer;
+				skinnedMeshRenderer.quality = SkinQuality.Auto;
+				// TODO: add support for blend shapes/morph targets
+				//if (HasBlendShapes(primitive))
+				//	SetupBlendShapes(primitive);
+				if (HasBones(skin))
+				{
+					await SetupBones(skin, skinnedMeshRenderer, meshObj, curMesh);
+				}
+
+				skinnedMeshRenderer.sharedMesh = curMesh;
+			}
+			else
+			{
+				renderer = meshObj.AddComponent<MeshRenderer>();
+			}
+
+			MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
+			meshFilter.sharedMesh = curMesh;
+
+			switch (Collider)
+			{
+				case ColliderType.Box:
+					var boxCollider = meshObj.AddComponent<BoxCollider>();
+					boxCollider.center = curMesh.bounds.center;
+					boxCollider.size = curMesh.bounds.size;
+					break;
+				case ColliderType.Mesh:
+					var meshCollider = meshObj.AddComponent<MeshCollider>();
+					meshCollider.sharedMesh = curMesh;
+					break;
+				case ColliderType.MeshConvex:
+					var meshConvexCollider = meshObj.AddComponent<MeshCollider>();
+					meshConvexCollider.sharedMesh = curMesh;
+					meshConvexCollider.convex = true;
+					break;
+			}
+
+			// for each primitve, load the mat?
+			/*  // materials
 				int materialIndex = primitive.Material != null ? primitive.Material.Id : -1;
 
-				await ConstructMeshPrimitive(primitive, meshId, i, materialIndex);
 
-				var primitiveObj = new GameObject("Primitive");
 
 				MaterialCacheData materialCacheData =
 					materialIndex >= 0 ? _assetCache.MaterialCache[materialIndex] : _defaultLoadedMaterial;
 
 				Material material = materialCacheData.GetContents(primitive.Attributes.ContainsKey(SemanticProperties.Color(0)));
+				*/
 
-				Mesh curMesh = _assetCache.MeshCache[meshId][i].LoadedMesh;
-				if (NeedsSkinnedMeshRenderer(primitive, skin))
+
+			meshObj.transform.SetParent(parent, false);
+			meshObj.SetActive(true);
+			_assetCache.MeshCache[meshId].PrimitiveGO = meshObj;
+		}
+
+		protected virtual async Task CreateMeshFromPrimitives(GLTFMesh mesh, int meshId)
+		{
+			if (_assetCache.MeshCache[meshId].LoadedMesh == null)
+			{
+				UnityMeshData unityMeshData = new UnityMeshData();
+				for (int i = 0; i < mesh.Primitives.Count; ++i)
 				{
-					var skinnedMeshRenderer = primitiveObj.AddComponent<SkinnedMeshRenderer>();
-					skinnedMeshRenderer.material = material;
-					skinnedMeshRenderer.quality = SkinQuality.Auto;
-					// TODO: add support for blend shapes/morph targets
-					//if (HasBlendShapes(primitive))
-					//	SetupBlendShapes(primitive);
-					if (HasBones(skin))
+					MeshPrimitive primitive = mesh.Primitives[i];
+					var meshAttributes = _assetCache.MeshCache[meshId].PrimitivesMeshAttributes[i];
+					var meshConstructionData = new MeshConstructionData
 					{
-						await SetupBones(skin, primitive, skinnedMeshRenderer, primitiveObj, curMesh);
+						Primitive = primitive,
+						MeshAttributes = meshAttributes
+					};
+
+					if (isMultithreaded)
+					{
+						await Task.Run(() => unityMeshData = ConvertAccessorsToUnityTypes(meshConstructionData, ref unityMeshData));
+					}
+					else
+					{
+						unityMeshData = ConvertAccessorsToUnityTypes(meshConstructionData);
 					}
 
-					skinnedMeshRenderer.sharedMesh = curMesh;
-				}
-				else
-				{
-					var meshRenderer = primitiveObj.AddComponent<MeshRenderer>();
-					meshRenderer.material = material;
-				}
+					//	}
 
-				MeshFilter meshFilter = primitiveObj.AddComponent<MeshFilter>();
-				meshFilter.sharedMesh = curMesh;
+					//	await ConstructUnityMesh(meshConstructionData, meshID, primitiveIndex, unityMeshData);
+					//	bool shouldUseDefaultMaterial = primitive.Material == null;
 
-				switch (Collider)
-				{
-					case ColliderType.Box:
-						var boxCollider = primitiveObj.AddComponent<BoxCollider>();
-						boxCollider.center = curMesh.bounds.center;
-						boxCollider.size = curMesh.bounds.size;
-						break;
-					case ColliderType.Mesh:
-						var meshCollider = primitiveObj.AddComponent<MeshCollider>();
-						meshCollider.sharedMesh = curMesh;
-						break;
-					case ColliderType.MeshConvex:
-						var meshConvexCollider = primitiveObj.AddComponent<MeshCollider>();
-						meshConvexCollider.sharedMesh = curMesh;
-						meshConvexCollider.convex = true;
-						break;
+					//	GLTFMaterial materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
+					//	if ((shouldUseDefaultMaterial && _defaultLoadedMaterial == null) ||
+					//		(!shouldUseDefaultMaterial && _assetCache.MaterialCache[materialIndex] == null))
+					//	{
+					//		await ConstructMaterial(materialToLoad, shouldUseDefaultMaterial ? -1 : materialIndex);
+					//	}
+					//}
 				}
-
-				primitiveObj.transform.SetParent(parent, false);
-				primitiveObj.SetActive(true);
-				_assetCache.MeshCache[meshId][i].PrimitiveGO = primitiveObj;
 			}
-		}
-
-
-		protected virtual async Task ConstructMeshPrimitive(MeshPrimitive primitive, int meshID, int primitiveIndex, int materialIndex)
-		{
-			if (_assetCache.MeshCache[meshID][primitiveIndex] == null)
-			{
-				_assetCache.MeshCache[meshID][primitiveIndex] = new MeshCacheData();
 			}
-			if (_assetCache.MeshCache[meshID][primitiveIndex].LoadedMesh == null)
-			{
-				var meshAttributes = _assetCache.MeshCache[meshID][primitiveIndex].MeshAttributes;
-				var meshConstructionData = new MeshConstructionData
-				{
-					Primitive = primitive,
-					MeshAttributes = meshAttributes
-				};
-
-				UnityMeshData unityMeshData = null;
-				if (isMultithreaded)
-				{
-					await Task.Run(() => unityMeshData = ConvertAccessorsToUnityTypes(meshConstructionData));
-				}
-				else
-				{
-					unityMeshData = ConvertAccessorsToUnityTypes(meshConstructionData);
-				}
-				
-				await ConstructUnityMesh(meshConstructionData, meshID, primitiveIndex, unityMeshData);
-			}
-
-			bool shouldUseDefaultMaterial = primitive.Material == null;
-
-			GLTFMaterial materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
-			if ((shouldUseDefaultMaterial && _defaultLoadedMaterial == null) ||
-				(!shouldUseDefaultMaterial && _assetCache.MaterialCache[materialIndex] == null))
-			{
-				await ConstructMaterial(materialToLoad, shouldUseDefaultMaterial ? -1 : materialIndex);
-			}
-		}
-
-		protected async Task TryYieldOnTimeout()
+				protected async Task TryYieldOnTimeout()
 		{
 			if ((Time.realtimeSinceStartup - _timeAtLastYield) > BudgetPerFrameInMilliseconds * 1000f)
 			{
@@ -1205,11 +1214,12 @@ namespace UnityGLTF
 			}
 		}
 
-		protected UnityMeshData ConvertAccessorsToUnityTypes(MeshConstructionData meshConstructionData)
+		protected void ConvertAccessorsToUnityTypes(MeshConstructionData meshConstructionData, ref UnityMeshData unityMeshData)
 		{
 			// todo optimize: There are multiple copies being performed to turn the buffer data into mesh data. Look into reducing them
 			MeshPrimitive primitive = meshConstructionData.Primitive;
 			Dictionary<string, AttributeAccessor> meshAttributes = meshConstructionData.MeshAttributes;
+					
 
 			int vertexCount = (int)primitive.Attributes[SemanticProperties.POSITION].Value.Count;
 
@@ -1312,10 +1322,8 @@ namespace UnityGLTF
 			}
 		}
 
-		protected async Task ConstructUnityMesh(MeshConstructionData meshConstructionData, int meshId, int primitiveIndex, UnityMeshData unityMeshData)
+		protected async Task ConstructUnityMesh(int meshId, uint vertexCount, UnityMeshData unityMeshData)
 		{
-			MeshPrimitive primitive = meshConstructionData.Primitive;
-			int vertexCount = (int)primitive.Attributes[SemanticProperties.POSITION].Value.Count;
 			bool hasNormals = unityMeshData.Normals != null;
 
 			await TryYieldOnTimeout();
@@ -1358,7 +1366,7 @@ namespace UnityGLTF
 				mesh.UploadMeshData(true);
 			}
 
-			_assetCache.MeshCache[meshId][primitiveIndex].LoadedMesh = mesh;
+			_assetCache.MeshCache[meshId].LoadedMesh = mesh;
 		}
 
 		protected virtual async Task ConstructMaterial(GLTFMaterial def, int materialIndex)
